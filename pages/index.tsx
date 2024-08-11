@@ -7,6 +7,7 @@ interface Map {
   name: string;
   description: string;
   likes: number;
+  challenges: number;
   link?: string; // link is added dynamically
 }
 
@@ -37,7 +38,7 @@ const Home: React.FC = () => {
   useEffect(() => {
     const fetchMaps = async () => {
       try {
-        const response = await fetch('/api/maps');
+        const response = await fetch('/api/maps?challenges=50');
         const data: Map[] = await response.json();
 
         // Format the fetched data
@@ -81,7 +82,7 @@ const Home: React.FC = () => {
               <h2>{map.name}</h2>
               <p className={styles.likes}>{Intl.NumberFormat('en-AU', { useGrouping: true }).format(map.likes)} likes</p>
               <p>{map.description}</p>
-              <button onClick={() => openLink(map)}>Play</button>
+              <button onClick={() => openLink(map)}>Play <span style={{"color": "gold"}}>{map.challenges} challenges</span></button>
             </div>
           </div>
         ))}
