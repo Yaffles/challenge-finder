@@ -1,0 +1,102 @@
+
+.container {
+  max-width: 70%;
+  margin: 0 auto;
+  padding: 20px;
+  color: white;
+  text-align: center;
+}
+
+.title {
+  font-size: 2.5rem;
+  margin-bottom: 35px;
+  margin-top: 0;
+}
+
+.searchBar {
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  margin-bottom: 40px;
+  width: 80%;
+  max-width: 400px;
+}
+
+.mapList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 50px;
+}
+
+.mapCard {
+  background-image: linear-gradient(163deg, #00ff75 0%, #3700ff 100%);
+  border-radius: 20px;
+  width: 450px;
+  display: flex;
+  flex-direction: column; /* Stack children vertically */
+  justify-content: space-between; /* Push content to top and button to bottom */
+  transition: all .3s;
+  box-sizing: border-box; /* Ensure padding is included in width/height */
+}
+
+.card2 {
+  background-color: #1a1a1a;
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column; /* Stack children vertically */
+  /* centre items horizontally */
+  align-items: center;
+  height: 100%; /* Allow card2 to take full height of mapCard */
+}
+
+.card2:hover {
+  transform: scale(0.98);
+  border-radius: 20px;
+}
+
+.mapCard:hover {
+  box-shadow: 0px 0px 30px 1px rgba(0, 255, 117, 0.30);
+}
+
+.mapCard h2 {
+  color: white !important;  /* Ensures map name text remains white */
+  margin-bottom: 0;
+
+}
+
+.mapCard p {
+  margin-bottom: 15px;
+  color: #a9a9a9;
+  word-wrap: break-word; /* Breaks long words like URLs */
+  max-width: 100%; /* Ensures content stays within the card */
+  overflow-wrap: break-word; /* Ensures long words break to the next line */
+  margin-bottom: auto;
+}
+
+.card2 button {
+  background-color: #4338ca;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  color: rgb(255, 255, 255);
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 15px; /* Space between description and button */
+}
+
+.mapCard button:hover {
+  background-color: #386bca;
+}
+
+.gold {
+  color: gold ;
+}
+
+.likes {
+  color: gold !important;
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-style: italic;
+}

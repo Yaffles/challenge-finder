@@ -25,6 +25,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+#
+/python
+
 # local env files
 .env*.local
 
