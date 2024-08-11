@@ -22,10 +22,16 @@ const getRandomColor = () => {
 
 const openLink = async (map: Map) => {
   try {
+    const newWindow = window.open('', '_blank');
     const response = await fetch(`/api/challenge/${map._id}`);
     const challengeId: string = await response.text();
     const challengeLink = `https://www.geoguessr.com/challenge/${challengeId}`;
-    window.open(challengeLink, '_blank');
+    if (newWindow) {
+      newWindow.location.href = challengeLink;
+    }
+    else {
+      window.location.href = challengeLink; // Fallback if the new window is blocked
+    }
   } catch (error) {
     console.error('Error fetching the challenge:', error);
   }
