@@ -1,22 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../src/styles/Home.module.css';
 import '../src/styles/globals.css';
-import { randomInt } from 'crypto';
 
 interface Map {
-  id: string;
+  _id: string;
   name: string;
   description: string;
-  link: string;
   likes: number;
-  challenges: string[];
+  link?: string; // link is added dynamically
 }
-
-const getRandomInt = (min: number, max: number) => {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min)) + min;
-};
 
 const getRandomColor = () => {
   const letters = '0123456789ABCDEF';
@@ -27,9 +19,15 @@ const getRandomColor = () => {
   return color;
 };
 
-const openLink = (map: Map) => {
-  window.open(map.link, '_blank');
-  map.link = "https://www.geoguessr.com/challenge/" + map.challenges[getRandomInt(0, map.challenges.length)]
+const openLink = async (map: Map) => {
+  try {
+    const response = await fetch(`/api/challenge/${map._id}`);
+    const challengeId: string = await response.text();
+    const challengeLink = `https://www.geoguessr.com/challenge/${challengeId}`;
+    window.open(challengeLink, '_blank');
+  } catch (error) {
+    console.error('Error fetching the challenge:', error);
+  }
 }
 
 const Home: React.FC = () => {
@@ -39,17 +37,17 @@ const Home: React.FC = () => {
   useEffect(() => {
     const fetchMaps = async () => {
       try {
-        const response = await fetch('/challengeData.json');
-        const data: Record<string, Map> = await response.json();
+        const response = await fetch('/api/maps');
+        const data: Map[] = await response.json();
 
-        // Convert the fetched data into the desired format for the `maps` state
-        const formattedMaps = Object.entries(data).map(([id, map]) => ({
+        // Format the fetched data
+        const formattedMaps = data.map((map) => ({
           ...map,
-          id: id,
-          link: "https://www.geoguessr.com/challenge/" + map.challenges[getRandomInt(0, map.challenges.length)]
+          link: "" // Placeholder for the link, which will be set when opening a challenge
         }));
-        // order by challenges
-        formattedMaps.sort((a, b) =>  b.challenges.length - a.challenges.length);
+
+        // Order by likes or other criteria if needed
+        formattedMaps.sort((a, b) => b.likes - a.likes);
 
         setMaps(formattedMaps);
       } catch (error) {
@@ -78,19 +76,18 @@ const Home: React.FC = () => {
 
       <div className={styles.mapList}>
         {filteredMaps.map((map) => (
-          <div key={map.id} className={styles.mapCard} style={{"backgroundImage": `linear-gradient(163deg, ${getRandomColor()} 0%, #3700ff 100%)`}}>
+          <div key={map._id} className={styles.mapCard} style={{backgroundImage: `linear-gradient(163deg, ${getRandomColor()} 0%, #3700ff 100%)`}}>
             <div className={styles.card2}>
               <h2>{map.name}</h2>
               <p className={styles.likes}>{Intl.NumberFormat('en-AU', { useGrouping: true }).format(map.likes)} likes</p>
               <p>{map.description}</p>
-              <button onClick={() => openLink(map)}>Play - <span className={styles.gold}>{map.challenges.length.toString() + " links"}</span></button>
+              <button onClick={() => openLink(map)}>Play</button>
             </div>
           </div>
         ))}
       </div>
     </div>
   );
-
 }
 
 export default Home;
