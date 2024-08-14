@@ -69,6 +69,9 @@ const Home: React.FC = () => {
     if (maps.length < 10) {
       setShowLoadMore(false);
     }
+    else {
+      setShowLoadMore(true);
+    }
   }, []);
 
   const filteredMaps = maps.filter((map) =>
