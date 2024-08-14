@@ -15,9 +15,11 @@ export default async function handler(
     const limit = parseInt(req.query.limit as string) || 10; // Default to 10 documents per page if not provided
     const skip = (page - 1) * limit;
 
-    // Fetch all documents from the 'maps' collection
-    const maps: WithId<Document>[] = await db.collection('maps')
+    // Fetch all documents from the 'maps' collection sorted by number of challenges
+    const maps: WithId<Document>[] = await db
+      .collection('maps')
       .find({})
+      .sort({ challenges: -1 })
       .skip(skip)
       .limit(limit)
       .toArray();
