@@ -4,7 +4,6 @@ import '../src/styles/globals.css';
 import Popup from '../components/Upload';
 import { Map } from '@/types/map';
 
-
 const getRandomColor = () => {
   const letters = '0123456789ABCDEF';
   let color = '#';
@@ -22,14 +21,13 @@ const openLink = async (map: Map) => {
     const challengeLink = `https://www.geoguessr.com/challenge/${challengeId}`;
     if (newWindow) {
       newWindow.location.href = challengeLink;
-    }
-    else {
+    } else {
       window.location.href = challengeLink; // Fallback if the new window is blocked
     }
   } catch (error) {
     console.error('Error fetching the challenge:', error);
   }
-}
+};
 
 const Home: React.FC = () => {
   const [maps, setMaps] = useState<Map[]>([]);
@@ -38,9 +36,8 @@ const Home: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [showLoadMore, setShowLoadMore] = useState(true);
 
-
   const togglePopup = () => {
-    setShowPopup(!showPopup)
+    setShowPopup(!showPopup);
   };
 
   useEffect(() => {
@@ -52,27 +49,28 @@ const Home: React.FC = () => {
         // Format the fetched data
         const formattedMaps = data.map((map) => ({
           ...map,
-          link: "" // Placeholder for the link, which will be set when opening a challenge
+          link: '', // Placeholder for the link, which will be set when opening a challenge
         }));
 
         // Order by likes or other criteria if needed
         formattedMaps.sort((a, b) => b.likes - a.likes);
 
-        // add the new maps to the existing ones
-        setMaps([...maps, ...formattedMaps]);
+        // Add the new maps to the existing ones
+        setMaps((prevMaps) => [...prevMaps, ...formattedMaps]);
+
+        // Update showLoadMore based on the number of fetched maps
+        if (formattedMaps.length < 10) {
+          setShowLoadMore(false);
+        } else {
+          setShowLoadMore(true);
+        }
       } catch (error) {
         console.error('Error fetching the map data:', error);
       }
     };
 
-    fetchMaps(1);
-    if (maps.length < 10) {
-      setShowLoadMore(false);
-    }
-    else {
-      setShowLoadMore(true);
-    }
-  }, []);
+    fetchMaps(page);
+  }, [page]);
 
   const filteredMaps = maps.filter((map) =>
     map.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -82,7 +80,9 @@ const Home: React.FC = () => {
     <div className={styles.container}>
       <h1 className={styles.title}>GeoGuessr Challenge Links</h1>
       <div>
-        <button className={styles.uploadButton} onClick={togglePopup}>Upload Challenge</button>
+        <button className={styles.uploadButton} onClick={togglePopup}>
+          Upload Challenge
+        </button>
         <Popup show={showPopup} onClose={togglePopup} />
       </div>
 
@@ -96,23 +96,36 @@ const Home: React.FC = () => {
 
       <div className={styles.mapList}>
         {filteredMaps.map((map) => (
-          <div key={map._id} className={styles.mapCard} style={{backgroundImage: `linear-gradient(163deg, ${getRandomColor()} 0%, #3700ff 100%)`}}>
+          <div
+            key={map._id}
+            className={styles.mapCard}
+            style={{
+              backgroundImage: `linear-gradient(163deg, ${getRandomColor()} 0%, #3700ff 100%)`,
+            }}
+          >
             <div className={styles.card2}>
               <h2>{map.name}</h2>
-              <p className={styles.likes}>{Intl.NumberFormat('en-AU', { useGrouping: true }).format(map.likes)} likes</p>
+              <p className={styles.likes}>
+                {Intl.NumberFormat('en-AU', { useGrouping: true }).format(
+                  map.likes
+                )}{' '}
+                likes
+              </p>
               <p>{map.description}</p>
-              <button onClick={() => openLink(map)}>Play <span style={{"color": "gold"}}>{map.challenges} challenges</span></button>
+              <button onClick={() => openLink(map)}>
+                Play <span style={{ color: 'gold' }}>{map.challenges} challenges</span>
+              </button>
             </div>
           </div>
         ))}
       </div>
       {showLoadMore && (
         <div className={styles.loadMore}>
-        <button onClick={() => setPage(page + 1)}>Load More</button>
-      </div>
+          <button onClick={() => setPage(page + 1)}>Load More</button>
+        </div>
       )}
     </div>
   );
-}
+};
 
 export default Home;
