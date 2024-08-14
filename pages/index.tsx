@@ -1,15 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../src/styles/Home.module.css';
 import '../src/styles/globals.css';
+import Popup from '../components/Upload';
+import { Map } from '@/types/map';
 
-interface Map {
-  _id: string;
-  name: string;
-  description: string;
-  likes: number;
-  challenges: number;
-  link?: string; // link is added dynamically
-}
 
 const getRandomColor = () => {
   const letters = '0123456789ABCDEF';
@@ -40,11 +34,19 @@ const openLink = async (map: Map) => {
 const Home: React.FC = () => {
   const [maps, setMaps] = useState<Map[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [showPopup, setShowPopup] = useState<boolean>(false);
+  const [page, setPage] = useState<number>(1);
+  const [showLoadMore, setShowLoadMore] = useState(true);
+
+
+  const togglePopup = () => {
+    setShowPopup(!showPopup)
+  };
 
   useEffect(() => {
-    const fetchMaps = async () => {
+    const fetchMaps = async (page: number) => {
       try {
-        const response = await fetch('/api/maps?challenges=50');
+        const response = await fetch(`/api/maps?page=${page}`);
         const data: Map[] = await response.json();
 
         // Format the fetched data
@@ -56,13 +58,17 @@ const Home: React.FC = () => {
         // Order by likes or other criteria if needed
         formattedMaps.sort((a, b) => b.likes - a.likes);
 
-        setMaps(formattedMaps);
+        // add the new maps to the existing ones
+        setMaps([...maps, ...formattedMaps]);
       } catch (error) {
         console.error('Error fetching the map data:', error);
       }
     };
 
-    fetchMaps();
+    fetchMaps(1);
+    if (maps.length < 10) {
+      setShowLoadMore(false);
+    }
   }, []);
 
   const filteredMaps = maps.filter((map) =>
@@ -72,6 +78,10 @@ const Home: React.FC = () => {
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>GeoGuessr Challenge Links</h1>
+      <div>
+        <button className={styles.uploadButton} onClick={togglePopup}>Upload Challenge</button>
+        <Popup show={showPopup} onClose={togglePopup} />
+      </div>
 
       <input
         type="text"
@@ -93,6 +103,11 @@ const Home: React.FC = () => {
           </div>
         ))}
       </div>
+      {showLoadMore && (
+        <div className={styles.loadMore}>
+        <button onClick={() => setPage(page + 1)}>Load More</button>
+      </div>
+      )}
     </div>
   );
 }

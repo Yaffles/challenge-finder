@@ -1,14 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import clientPromise from '../../src/lib/mongodb';
 import { WithId, Document } from 'mongodb';
-
-type Map = {
-  _id: string;
-  name: string;
-  description: string;
-  likes: number;
-  challenges: number;
-};
+import { Map } from '@/types/map';
 
 export default async function handler(
   req: NextApiRequest,
@@ -18,19 +11,16 @@ export default async function handler(
     const client = await clientPromise;
     const db = client.db('Cluster0'); // Replace with your actual database name
 
-    // get query params for 'challenges'
-    const minChallenges = req.query.challenges;
-    const total = req.query.total; // get query param for 'total'
+    const page = parseInt(req.query.page as string) || 1; // Default to page 1 if not provided
+    const limit = parseInt(req.query.limit as string) || 10; // Default to 10 documents per page if not provided
+    const skip = (page - 1) * limit;
 
     // Fetch all documents from the 'maps' collection
-    const query: any = {}
-    if (minChallenges) {
-      query.challenges = { $gte: parseInt(minChallenges as string) }
-    }
-
-    // Fetch all documents from the 'maps' collection
-    const maps: WithId<Document>[] = await db.collection('maps').find(query).toArray()
-
+    const maps: WithId<Document>[] = await db.collection('maps')
+      .find({})
+      .skip(skip)
+      .limit(limit)
+      .toArray();
     // const maps: WithId<Document>[] = await db.collection('maps').find({}).toArray();
 
     // Transform the documents into Map[] type
