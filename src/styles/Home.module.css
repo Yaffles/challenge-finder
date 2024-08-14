@@ -5,6 +5,7 @@
   padding: 20px;
   color: white;
   text-align: center;
+
 }
 
 .title {
@@ -29,6 +30,7 @@
   gap: 50px;
 }
 
+
 .mapCard {
   background-image: linear-gradient(163deg, #00ff75 0%, #3700ff 100%);
   border-radius: 20px;
@@ -36,7 +38,7 @@
   display: flex;
   flex-direction: column; /* Stack children vertically */
   justify-content: space-between; /* Push content to top and button to bottom */
-  transition: all .3s;
+  transition: all 0.2s;
   box-sizing: border-box; /* Ensure padding is included in width/height */
 }
 
@@ -49,6 +51,7 @@
   /* centre items horizontally */
   align-items: center;
   height: 100%; /* Allow card2 to take full height of mapCard */
+
 }
 
 .card2:hover {
@@ -60,10 +63,26 @@
   box-shadow: 0px 0px 30px 1px rgba(0, 255, 117, 0.30);
 }
 
-.mapCard h2 {
+
+@keyframes glow {
+  from {
+    text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff, 0 0 20px #ff00ff;
+  }
+  to {
+    text-shadow: 0 0 20px #00ffcc, 0 0 30px #00ffcc, 0 0 40px #00ffcc;
+  }
+}
+.mapCard a {
   color: white !important;  /* Ensures map name text remains white */
   margin-bottom: 0;
+  text-decoration: none;
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-block-start: 0.5em;
 
+  color: #fff;
+  /* text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff, 0 0 20px #ff00ff; */
+  /* animation: glow 1s ease-in-out infinite alternate; */
 }
 
 .mapCard p {
@@ -110,6 +129,7 @@
   cursor: pointer;
   transition: background-color 0.3s;
   margin-top: 30px; /* Space between description and button */
+  margin-bottom: 20px;
 }
 
 .loadMore button:hover {
@@ -129,4 +149,23 @@
 }
 .uploadButton:hover {
   background-color: #015d15;
+}
+
+.spinner {
+  border: 8px solid rgba(255, 255, 255, 0.1);
+  border-top: 8px solid rgb(255, 255, 255);
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1.5s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

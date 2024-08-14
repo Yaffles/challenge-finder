@@ -35,6 +35,7 @@ const Home: React.FC = () => {
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
   const [showLoadMore, setShowLoadMore] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   const togglePopup = () => {
     setShowPopup(!showPopup);
@@ -42,6 +43,7 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const fetchMaps = async (page: number) => {
+      setLoading(true);
       try {
         const response = await fetch(`/api/maps?page=${page}`);
         const data: Map[] = await response.json();
@@ -67,6 +69,7 @@ const Home: React.FC = () => {
       } catch (error) {
         console.error('Error fetching the map data:', error);
       }
+      setLoading(false);
     };
 
     fetchMaps(page);
@@ -104,7 +107,7 @@ const Home: React.FC = () => {
             }}
           >
             <div className={styles.card2}>
-              <h2>{map.name}</h2>
+              <a href={"https://www.geoguessr.com/map/"+map._id}>{map.name}</a>
               <p className={styles.likes}>
                 {Intl.NumberFormat('en-AU', { useGrouping: true }).format(
                   map.likes
@@ -119,11 +122,12 @@ const Home: React.FC = () => {
           </div>
         ))}
       </div>
-      {showLoadMore && (
+      {showLoadMore && !loading && (
         <div className={styles.loadMore}>
           <button onClick={() => setPage(page + 1)}>Load More</button>
         </div>
       )}
+      { loading && <div className={styles.spinner}></div> }
     </div>
   );
 };
