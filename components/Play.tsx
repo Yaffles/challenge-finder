@@ -56,11 +56,11 @@ const Popup: React.FC<PopupProps> = ({ show, onClose, map }) => {
   };
 
   const handlePlay = async (type?: string) => {
-    let url = `/api/challenge/${map._id}`;
+    let url = `/api/challenge/${map._id}?`;
     if (type) {
-      url += `?type=${type}`;
+      url += `type=${type}&`;
     }
-    url += `&timeLimit=${timeLimits[timeLimitIndex]}`;
+    url += `timeLimit=${timeLimits[timeLimitIndex]}`;
     const response = await fetch(url);
     if (response.status == 404) {
       alert('No challenges found for this setting');

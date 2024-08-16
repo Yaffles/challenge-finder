@@ -12,6 +12,7 @@ export default async function handler(
   res: NextApiResponse<string | { message: string }>
 ) {
   const { mapId } = req.query;
+  console.log('mapId:', mapId);
   // type
   const type = req.query.type as string | undefined;
   console.log('type:', type);
@@ -45,6 +46,7 @@ export default async function handler(
     }
 
     if (timeLimit && timeLimit !== '0') {
+      console.log('timeLimit:', timeLimit);
       if (timeLimit === '360') {
         match.timeLimit = 0;
       }
@@ -53,6 +55,7 @@ export default async function handler(
       }
     }
 
+    console.log(match);
     const [challenge] = await db
       .collection('challenges')
       .aggregate([
