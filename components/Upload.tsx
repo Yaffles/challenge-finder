@@ -37,6 +37,8 @@ const Popup: React.FC<PopupProps> = ({ show, onClose }) => {
 
         const result = await response.json();
         console.log('Success:', result);
+        // popup
+        alert(result.message);
       } catch (error) {
         console.error('Error:', error);
       }

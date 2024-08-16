@@ -1,0 +1,166 @@
+/* components/Upload.module.css */
+.popupOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.mapColor {
+    background-image: linear-gradient(163deg, #00ff75 0%, #3700ff 100%);
+    border-radius: 20px;
+    width: 35%;
+    height: 35%;
+
+    display: flex;
+    flex-direction: column; /* Stack children vertically */
+    justify-content: space-between; /* Push content to top and button to bottom */
+    transition: all 0.2s;
+    box-sizing: border-box; /* Ensure padding is included in width/height */
+}
+
+.popupContent {
+    background-color: #1a1a1a;
+    border-radius: 20px;
+
+    display: flex;
+    flex-direction: column; /* Stack children vertically */
+    /* centre items horizontally */
+    align-items: center;
+    height: 100%; /* Allow card2 to take full height of mapCard */
+    width: 100%;
+    padding: 20px; /* Add some padding around the content */
+    box-sizing: border-box; /* Ensure padding is included in width/height */
+}
+
+/* .popupContent:hover {
+    transform: scale(0.98);
+    border-radius: 20px;
+} */
+
+.mapColor:hover {
+    box-shadow: 0px 0px 30px 1px rgba(0, 255, 117, 0.30);
+}
+
+.closeButton {
+    background: red;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 7px;
+    cursor: pointer;
+    float: right;
+    margin:10px;
+    margin-left: auto;
+}
+
+.submitButton {
+    background: green;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 7px;
+    cursor: pointer;
+}
+
+.inputText {
+    width: 40%;
+    height: 40%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.button {
+    margin: 5px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: #989898;
+}
+
+.popupContent a {
+    color: white !important;  /* Ensures map name text remains white */
+    margin-bottom: 0;
+    text-decoration: none;
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-block-start: 0.5em;
+
+    color: #fff;
+    /* text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff, 0 0 20px #ff00ff; */
+    /* animation: glow 1s ease-in-out infinite alternate; */
+}
+
+.popupContent p {
+    margin-bottom: 15px;
+    color: #a9a9a9;
+    word-wrap: break-word; /* Breaks long words like URLs */
+    max-width: 100%; /* Ensures content stays within the card */
+    overflow-wrap: break-word; /* Ensures long words break to the next line */
+    margin-bottom: auto;
+}
+
+.likes {
+    color: gold !important;
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-style: italic;
+}
+
+.gold {
+    color: gold;
+}
+
+.buttonContainer {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.slider {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 8px;
+    background: #ddd;
+    border-radius: 5px;
+    outline: none;
+  }
+
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #4CAF50;
+    cursor: pointer;
+  }
+
+  .slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #4CAF50;
+    cursor: pointer;
+  }
+
+.sliderLabel {
+display: block;
+text-align: center;
+font-size: 14px;
+color: #bdbdbd;
+}

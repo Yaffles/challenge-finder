@@ -10,6 +10,7 @@ async function processChallenge(input: string, client: any) {
 
   let successes = 0;
   let errors = 0;
+  let duplicates = 0;
 
   const db = client.db('Cluster0'); // Replace with your actual database name
   const collection = db.collection('maps');
@@ -17,8 +18,11 @@ async function processChallenge(input: string, client: any) {
 
   const tasks = matches.map(async (match) => {
     try {
-      let id = match.split("/").pop();
-      if (!id) {
+      let idMatch = match.match(/geoguessr\.com\/challenge\/([A-Za-z0-9]+)/);
+      let id;
+      if (idMatch && idMatch[1]) {
+        id = idMatch[1];
+      } else {
         errors += 1;
         return;
       }
@@ -32,6 +36,8 @@ async function processChallenge(input: string, client: any) {
       let mapId;
       if (info['challenge']['mapSlug'] == 'country-streak') {
         mapId = 'country-streak';
+      } else if (info['challenge']['mapSlug'] == 'us-state-streak') {
+        mapId = 'us-state-streak';
       } else {
         try {
           mapId = info['map']['id'];
@@ -53,6 +59,13 @@ async function processChallenge(input: string, client: any) {
             "description": "How many countries can you guess in a row?",
             "likes": 50000
           };
+        } else if (mapId == 'us-state-streak') {
+          mapInfo = {
+            "_id": mapId,
+            "name": "US State Streak",
+            "description": "How many US states can you guess in a row?",
+            "likes": 10000
+          };
         } else {
           mapInfo = {
             "_id": mapId,
@@ -63,22 +76,38 @@ async function processChallenge(input: string, client: any) {
         }
         try {
           await collection.insertOne(mapInfo);
-        } catch (error) {
-          errors += 1;
-          return;
+        } catch (error: any) {
+          if (error.code === 11000) {
+            // not an error as from simultaneous creations
+
+          }
+          else {
+            console.log('Error inserting map info:', error); // Debugging statement
+            errors += 1;
+            return;
+          }
+
         }
       }
 
       const challengeDoc = {
         "_id": id,
-        "mapId": mapId
+        "mapId": mapId,
+        "timeLimit": info.challenge.timeLimit,
+        'move': !info.challenge.forbidMoving,
+        'zoom': !info.challenge.forbidZooming,
+        'pan': !info.challenge.forbidRotating,
+        'streak': info.challenge.gameMode === 'streak'
       };
       try {
         await challengesCollection.insertOne(challengeDoc);
       } catch (error: any) {
         if (error.code === 11000) {
+          // console.log('Duplicate challenge ID:', id); // Debugging statement
+          duplicates += 1;
           return;
         } else {
+          console.log('Error inserting challenge doc:', error); // Debugging statement
           errors += 1;
           return;
         }
@@ -92,6 +121,7 @@ async function processChallenge(input: string, client: any) {
         return;
       }
 
+
       successes += 1;
     } catch (error) {
       errors += 1;
@@ -99,18 +129,17 @@ async function processChallenge(input: string, client: any) {
   });
 
   await Promise.all(tasks);
-  return { successes, errors };
+  return { successes, errors, duplicates };
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     const { input } = req.body;
-    console.log('Received input:', input);
 
     const client = await clientPromise;
     const result = await processChallenge(input, client);
 
-    res.status(200).json({ message: `${result.successes} challenges successfully created, ${result.errors} errors occurred` });
+    res.status(200).json({ message: `${result.successes} challenges successfully created, ${result.errors} errors occurred and ${result.duplicates} duplicates` });
   } else {
     res.status(405).json({ message: 'Method not allowed' });
   }

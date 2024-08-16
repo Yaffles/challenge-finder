@@ -12,6 +12,12 @@ export default async function handler(
   res: NextApiResponse<string | { message: string }>
 ) {
   const { mapId } = req.query;
+  // type
+  const type = req.query.type as string | undefined;
+  console.log('type:', type);
+
+  const timeLimit = req.query.timeLimit as string | undefined;
+
 
   if (!mapId || typeof mapId !== 'string') {
     res.status(400).json({ message: 'Invalid mapId' });
@@ -22,10 +28,35 @@ export default async function handler(
     const client = await clientPromise;
     const db = client.db('Cluster0'); // Replace with your actual database name
 
+    const match: any = { mapId };
+
+    if (type === 'm') {
+      match.move = true;
+      match.pan = true
+      match.zoom = true;
+    } else if (type === 'nm') {
+      match.move = false;
+      match.pan = true
+      match.zoom = true;
+    } else if (type == 'nmpz') {
+      match.move = false;
+      match.pan = false;
+      match.zoom = false;
+    }
+
+    if (timeLimit && timeLimit !== '0') {
+      if (timeLimit === '360') {
+        match.timeLimit = 0;
+      }
+      else {
+        match.timeLimit = parseInt(timeLimit);
+      }
+    }
+
     const [challenge] = await db
       .collection('challenges')
       .aggregate([
-        { $match: { mapId } },   // Match documents with the specific mapId
+        { $match: match },   // Match documents with the specific mapId
         { $sample: { size: 1 } } // Randomly select one document
       ])
       .toArray();
