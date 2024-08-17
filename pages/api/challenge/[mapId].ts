@@ -12,11 +12,7 @@ export default async function handler(
   res: NextApiResponse<string | { message: string }>
 ) {
   const { mapId } = req.query;
-  console.log('mapId:', mapId);
-  // type
   const type = req.query.type as string | undefined;
-  console.log('type:', type);
-
   const timeLimit = req.query.timeLimit as string | undefined;
 
 
@@ -28,6 +24,12 @@ export default async function handler(
   try {
     const client = await clientPromise;
     const db = client.db('Cluster0'); // Replace with your actual database name
+
+    await db.collection('api_logs').updateOne(
+      { endpoint: '/api/challenge/[mapId]' },
+      { $inc: { count: 1 } },
+      { upsert: true } // Create the document if it doesn't exist
+    );
 
     const match: any = { mapId };
 
@@ -46,7 +48,6 @@ export default async function handler(
     }
 
     if (timeLimit && timeLimit !== '0') {
-      console.log('timeLimit:', timeLimit);
       if (timeLimit === '360') {
         match.timeLimit = 0;
       }
@@ -55,7 +56,6 @@ export default async function handler(
       }
     }
 
-    console.log(match);
     const [challenge] = await db
       .collection('challenges')
       .aggregate([
