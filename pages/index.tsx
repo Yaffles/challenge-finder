@@ -3,7 +3,7 @@ import styles from '../src/styles/Home.module.css';
 import '../src/styles/globals.css';
 import Popup from '../components/Upload';
 import Play from '@/components/Play';
-
+import Head from 'next/head';
 import { Map } from '@/types/map';
 import { Analytics } from "@vercel/analytics/react"
 
@@ -116,6 +116,19 @@ const Home: React.FC = () => {
   // );
 
   return (
+    <>
+    <Head>
+      <title>GeoGuessr Challenges</title>
+        <meta name="description" content="Explore and play thousands of free GeoGuessr challenges with Challenge Finder. Discover a vast collection of challenges created by paid users, available to play for free. Start your adventure now!" />
+        <meta name="keywords" content="GeoGuessr, free challenges, play GeoGuessr, GeoGuessr challenges, geography game" />
+        <meta property="og:title" content="Free GeoGuessr Challenges - Play Thousands of Challenges on Challenge Finder" />
+        <meta property="og:description" content="Explore and play thousands of free GeoGuessr challenges with Challenge Finder. Discover a vast collection of challenges created by paid users, available to play for free. Start your adventure now!" />
+        <meta property="og:image" content="/path/to/your/og-image.jpg" />
+        <meta property="og:url" content="https://challenge-finder.vercel.app/" />
+        <meta property="og:type" content="website" />
+        <link rel="canonical" href="https://challenge-finder.vercel.app/" />
+    </Head>
+    <main>
     <div className={styles.container}>
       <a href="https://github.com/yaffles/challenge-finder" target="_blank" className={styles.githubIcon}>
           <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="white">
@@ -193,6 +206,8 @@ const Home: React.FC = () => {
       { loading && <div className={styles.spinner}></div> }
       <Analytics />
     </div>
+    </main>
+    </>
   );
 };
 
