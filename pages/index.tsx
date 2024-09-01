@@ -126,6 +126,7 @@ const Home: React.FC = () => {
         <meta property="og:image" content="/path/to/your/og-image.jpg" />
         <meta property="og:url" content="https://challenge-finder.vercel.app/" />
         <meta property="og:type" content="website" />
+        <meta name="msvalidate.01" content="FD5AC4FC134FA5EA1D579D8F43EB90A6" />
         <link rel="canonical" href="https://challenge-finder.vercel.app/" />
     </Head>
     <main>
