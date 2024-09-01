@@ -206,3 +206,9 @@
   fill: rgb(55, 55, 55); /* Change the color of the icon to grey */
   pointer-events: none; /* Ensure the icon itself doesn’t interfere with clicks */
 }
+
+.githubIcon {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+}

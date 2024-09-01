@@ -15,7 +15,6 @@ export default async function handler(
   const type = req.query.type as string | undefined;
   const timeLimit = req.query.timeLimit as string | undefined;
 
-
   if (!mapId || typeof mapId !== 'string') {
     res.status(400).json({ message: 'Invalid mapId' });
     return;
@@ -25,7 +24,8 @@ export default async function handler(
     const client = await clientPromise;
     const db = client.db('Cluster0'); // Replace with your actual database name
 
-    await db.collection('api_logs').updateOne(
+    // Start logging asynchronously
+    const logPromise = db.collection('api_logs').updateOne(
       { endpoint: '/api/challenge/[mapId]' },
       { $inc: { count: 1 } },
       { upsert: true } // Create the document if it doesn't exist
@@ -35,11 +35,11 @@ export default async function handler(
 
     if (type === 'm') {
       match.move = true;
-      match.pan = true
+      match.pan = true;
       match.zoom = true;
     } else if (type === 'nm') {
       match.move = false;
-      match.pan = true
+      match.pan = true;
       match.zoom = true;
     } else if (type == 'nmpz') {
       match.move = false;
@@ -50,8 +50,7 @@ export default async function handler(
     if (timeLimit && timeLimit !== '0') {
       if (timeLimit === '360') {
         match.timeLimit = 0;
-      }
-      else {
+      } else {
         match.timeLimit = parseInt(timeLimit);
       }
     }
@@ -65,11 +64,15 @@ export default async function handler(
       .toArray();
 
     if (!challenge) {
-        res.status(404).json({ message: 'No challenges found for this map' });
-        return;
+      res.status(404).json({ message: 'No challenges found for this map' });
+      return;
     }
 
     res.status(200).send(challenge._id);
+
+    // Log the API call asynchronously, after sending the response
+    await Promise.allSettled([logPromise]);
+
   } catch (e) {
     console.error(e);
     res.status(500).json({ message: 'Internal Server Error' });
