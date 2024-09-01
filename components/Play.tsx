@@ -101,7 +101,7 @@ const Popup: React.FC<PopupProps> = ({ show, onClose, map }) => {
             likes
           </p>
           <p>{map.description}</p>
-          <div>
+          <div className={styles.optionsContainer}>
             <div>
               <input
                 type="range"

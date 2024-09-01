@@ -15,8 +15,10 @@
 .mapColor {
     background-image: linear-gradient(163deg, #00ff75 0%, #3700ff 100%);
     border-radius: 20px;
-    width: 35%;
-    height: 35%;
+    width: 95%;
+    max-width: 800px;
+    height: 85%;
+    max-height: 500px;
 
     display: flex;
     flex-direction: column; /* Stack children vertically */
@@ -56,7 +58,6 @@
     padding: 7px;
     cursor: pointer;
     float: right;
-    margin:10px;
     margin-left: auto;
 }
 
@@ -84,6 +85,7 @@
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    max-width: 22%;
 }
 
 .button:hover {
@@ -163,4 +165,8 @@ display: block;
 text-align: center;
 font-size: 14px;
 color: #bdbdbd;
+}
+
+.optionsContainer {
+    max-width: 95%;
 }
