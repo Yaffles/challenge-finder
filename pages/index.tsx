@@ -119,15 +119,18 @@ const Home: React.FC = () => {
     <>
     <Head>
       <title>GeoGuessr Challenges</title>
-        <meta name="description" content="Explore and play thousands of free GeoGuessr challenges with Challenge Finder. Discover a vast collection of challenges created by paid users, available to play for free. Start your adventure now!" />
-        <meta name="keywords" content="GeoGuessr, free challenges, play GeoGuessr, GeoGuessr challenges, geography game" />
-        <meta property="og:title" content="Free GeoGuessr Challenges - Play Thousands of Challenges on Challenge Finder" />
-        <meta property="og:description" content="Explore and play thousands of free GeoGuessr challenges with Challenge Finder. Discover a vast collection of challenges created by paid users, available to play for free. Start your adventure now!" />
-        <meta property="og:image" content="/path/to/your/og-image.jpg" />
-        <meta property="og:url" content="https://challenge-finder.vercel.app/" />
-        <meta property="og:type" content="website" />
-        <meta name="msvalidate.01" content="FD5AC4FC134FA5EA1D579D8F43EB90A6" />
-        <link rel="canonical" href="https://challenge-finder.vercel.app/" />
+      <meta name="description" content="Explore and play thousands of free GeoGuessr challenges with Challenge Finder. Discover a vast collection of challenges created by paid users, available to play for free. Start your adventure now!" />
+      <meta name="keywords" content="GeoGuessr, free challenges, play GeoGuessr, GeoGuessr challenges, geography game" />
+      <meta property="og:title" content="Free GeoGuessr Challenges - Play Thousands of Challenges on Challenge Finder" />
+      <meta property="og:description" content="Explore and play thousands of free GeoGuessr challenges with Challenge Finder. Discover a vast collection of challenges created by paid users, available to play for free. Start your adventure now!" />
+      <meta property="og:site_name" content="Challenge Finder" />
+      <meta property="og:image" content="./favicon.ico" />
+      <meta property="og:url" content="https://challenge-finder.vercel.app/" />
+      <meta property="og:type" content="website" />
+      <meta name="msvalidate.01" content="FD5AC4FC134FA5EA1D579D8F43EB90A6" />
+      <link rel="canonical" href="https://challenge-finder.vercel.app/" />
+      <link rel="icon" href="./favicon.ico" type="image/x-icon" />
+      <link rel="apple-touch-icon" href="./favicon.ico" />
     </Head>
     <main>
     <div className={styles.container}>
