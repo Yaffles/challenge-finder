@@ -24,12 +24,7 @@ export default async function handler(
     const client = await clientPromise;
     const db = client.db('Cluster0'); // Replace with your actual database name
 
-    // Start logging asynchronously
-    const logPromise = db.collection('api_logs').updateOne(
-      { endpoint: '/api/challenge/[mapId]' },
-      { $inc: { count: 1 } },
-      { upsert: true } // Create the document if it doesn't exist
-    );
+
 
     const match: any = { mapId };
 
@@ -63,15 +58,34 @@ export default async function handler(
       ])
       .toArray();
 
+
+
     if (!challenge) {
       res.status(404).json({ message: 'No challenges found for this map' });
-      return;
+    }
+    else {
+      res.status(200).send(challenge._id);
     }
 
-    res.status(200).send(challenge._id);
+
+    const apiLogPromise = db.collection('api_logs').updateOne(
+      { endpoint: '/api/challenge/[mapId]' },
+      { $inc: { count: 1 } },
+      { upsert: true } // Create the document if it doesn't exist
+    );
+    const logPromise = db.collection('log').insertOne({
+      mapId: mapId,
+      move: match.move,
+      pan: match.pan,
+      zoom: match.zoom,
+      timeLimit: match.timeLimit, // Only include if relevant
+      timestamp: new Date(),
+      success: !!challenge, // whether the API request was successful or not
+    });
+
 
     // Log the API call asynchronously, after sending the response
-    await Promise.allSettled([logPromise]);
+    await Promise.allSettled([logPromise, apiLogPromise]);
 
   } catch (e) {
     console.error(e);
