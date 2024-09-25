@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
+    "target": "ES2015", // Set the target to ES2015 or higher
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,

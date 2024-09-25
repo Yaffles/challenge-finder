@@ -63,7 +63,7 @@ const Popup: React.FC<PopupProps> = ({ show, onClose, map }) => {
     url += `timeLimit=${timeLimits[timeLimitIndex]}`;
     const response = await fetch(url);
     if (response.status == 404) {
-      alert('No challenges found for this setting');
+      alert('No challenges found for this setting. Please try again with different settings or wait one day for it to generate.');
       return
     };
     const challengeId: string = await response.text();

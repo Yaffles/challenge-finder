@@ -16,7 +16,7 @@ async function processChallenge(input: string, client: any) {
   const collection = db.collection('maps');
   const challengesCollection = db.collection('challenges');
 
-  const tasks = matches.map(async (match) => {
+  async function process(match: string) {
     try {
       let idMatch = match.match(/geoguessr\.com\/challenge\/([A-Za-z0-9]+)/);
       let id;
@@ -126,7 +126,27 @@ async function processChallenge(input: string, client: any) {
     } catch (error) {
       errors += 1;
     }
-  });
+  };
+
+  const batchSize = 1000; // You can adjust the batch size for better performance
+  let tasks = [];
+
+  for (let i = 0; i < matches.length; i++) {
+    tasks.push(process(matches[i])); // Replace with your actual async task
+    if (tasks.length >= batchSize) {
+      await Promise.all(tasks); // Wait for batch to complete
+      tasks = []; // Clear tasks for the next batch
+    }
+  }
+
+  // Run remaining tasks
+  if (tasks.length > 0) {
+    await Promise.all(tasks);
+  }
+
+  console.log(`async tasks done.`);
+
+
 
   await Promise.all(tasks);
   return { successes, errors, duplicates };
