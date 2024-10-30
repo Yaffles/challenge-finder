@@ -58,26 +58,26 @@ const playedChallenges = await db.collection('log')
 .project({ challengeId: 1 })
 .toArray();
 
-// Extract challenge IDs into an array
-const playedChallengeIds = playedChallenges.map(log => log.challengeId);
+  // Extract challenge IDs into an array
+  const playedChallengeIds = playedChallenges.map(log => log.challengeId);
 
-// Step 2: Use aggregation to find a random challenge that is not played
-const randomChallenge = await db.collection('challenges').aggregate([
-{
-  $match: {
-    ...match,
-    _id: { $nin: playedChallengeIds }
+  // Step 2: Use aggregation to find a random challenge that is not played
+  const randomChallenge = await db.collection('challenges').aggregate([
+  {
+    $match: {
+      ...match,
+      _id: { $nin: playedChallengeIds }
+    }
+  },
+  {
+    $sample: { size: 1 } // This selects a random document
   }
-},
-{
-  $sample: { size: 1 } // This selects a random document
-}
-]).toArray();
+  ]).toArray();
 
-// Ensure we have a challenge before accessing
-const challenge = randomChallenge.length > 0 ? randomChallenge[0]._id.toString() : null;
+  // Ensure we have a challenge before accessing
+  const challenge = randomChallenge.length > 0 ? randomChallenge[0]._id.toString() : null;
 
-console.log("finished fetching");
+  console.log("finished fetching");
 
 
 

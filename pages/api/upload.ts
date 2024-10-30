@@ -71,7 +71,8 @@ async function processChallenge(input: string, client: any) {
             "_id": mapId,
             "name": info['map']['name'],
             "description": info['map']['description'],
-            "likes": info['map']['likes']
+            "likes": info['map']['likes'],
+            "challenges": 0
           };
         }
         try {
