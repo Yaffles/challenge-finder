@@ -194,7 +194,7 @@ const Home: React.FC = () => {
             }}
           >
             <div className={styles.card2}>
-              <a href={"https://www.geoguessr.com/map/"+map._id}>{map.name}</a>
+              <a href={"https://www.geoguessr.com/maps/"+map._id}>{map.name}</a>
               <p className={styles.likes}>
                 {Intl.NumberFormat('en-AU', { useGrouping: true }).format(
                   map.likes

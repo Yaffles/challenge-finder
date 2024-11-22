@@ -93,7 +93,7 @@ const Popup: React.FC<PopupProps> = ({ show, onClose, map }) => {
       <div className={styles.mapColor} ref={popupRef}>
         <div className={styles.popupContent}>
           <button className={styles.closeButton} onClick={onClose}>Close</button>
-          <a href={"https://www.geoguessr.com/map/" + map._id}>{map.name}</a>
+          <a href={"https://www.geoguessr.com/maps/" + map._id}>{map.name}</a>
           <p className={styles.likes}>
             {Intl.NumberFormat('en-AU', { useGrouping: true }).format(
               map.likes
