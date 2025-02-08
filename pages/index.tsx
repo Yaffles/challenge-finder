@@ -33,6 +33,7 @@ const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [showUploadPopup, setShowUploadPopup] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
+  const [sortByLikes, setSortByLikes] = useState<number>(0);
   const [showLoadMore, setShowLoadMore] = useState(true);
   const [loading, setLoading] = useState(true);
 
@@ -48,10 +49,10 @@ const Home: React.FC = () => {
     setShowPlayPopup(true);
   };
 
-  const fetchMaps = async (page: number) => {
+  const fetchMaps = async (page: number, sortByLikes: number = 0) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/maps?page=${page}`);
+      const response = await fetch(`/api/maps?page=${page}?sortByLikes=${sortByLikes}`);
       const data: Map[] = await response.json();
 
       // Format the fetched data
@@ -79,12 +80,8 @@ const Home: React.FC = () => {
   };
 
   useEffect(() => {
-
-
-    fetchMaps(page);
-
-
-  }, [page]);
+    fetchMaps(page, sortByLikes);
+  }, [page, sortByLikes]);
 
   const handleSearch = async () => {
     if (!searchTerm) {
@@ -92,13 +89,13 @@ const Home: React.FC = () => {
       // Fetch all maps when search term is empty
       setShowLoadMore(true);
       setPage(1);
-      fetchMaps(1);
+      fetchMaps(1, sortByLikes);
       return;
     }
     setLoading(true);
 
     try {
-      const response = await fetch(`/api/maps/search?query=${searchTerm}`);
+      const response = await fetch(`/api/maps/search?query=${searchTerm}?sortByLikes=${sortByLikes}`);
       const data: Map[] = await response.json();
       setMaps(data);
       setShowLoadMore(false);
@@ -117,6 +114,10 @@ const Home: React.FC = () => {
   // const filteredMaps = maps.filter((map) =>
   //   map.name.toLowerCase().includes(searchTerm.toLowerCase())
   // );
+
+  const handleSortChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSortByLikes(event.target.value === "byLikes" ? 1 : 0);
+  };
 
   return (
     <>
@@ -181,7 +182,26 @@ const Home: React.FC = () => {
         </button>
 
       </div>
-
+      <div className={styles.radioGroup}>
+        <label className={styles.radioLabel}>
+          <input
+            type="radio"
+            value="byChallenges"
+            checked={sortByLikes === 0}
+            onChange={handleSortChange}
+          />
+          <span>Sort by challenges</span>
+        </label>
+        <label className={styles.radioLabel}>
+          <input
+            type="radio"
+            value="byLikes"
+            checked={sortByLikes === 1}
+            onChange={handleSortChange}
+          />
+          <span>Sort by likes</span>
+        </label>
+      </div>
 
 
       <div className={styles.mapList}>
