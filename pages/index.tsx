@@ -52,7 +52,7 @@ const Home: React.FC = () => {
   const fetchMaps = async (page: number, sortByLikes: number = 0) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/maps?page=${page}?sortByLikes=${sortByLikes}`);
+      const response = await fetch(`/api/maps?page=${page}&sortByLikes=${sortByLikes}`);
       const data: Map[] = await response.json();
 
       // Format the fetched data
@@ -61,8 +61,6 @@ const Home: React.FC = () => {
         link: '', // Placeholder for the link, which will be set when opening a challenge
       }));
 
-      // Order by likes or other criteria if needed
-      formattedMaps.sort((a, b) => b.likes - a.likes);
 
       // Add the new maps to the existing ones
       setMaps((prevMaps) => [...prevMaps, ...formattedMaps]);
@@ -95,7 +93,7 @@ const Home: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`/api/maps/search?query=${searchTerm}?sortByLikes=${sortByLikes}`);
+      const response = await fetch(`/api/maps/search?query=${searchTerm}&sortByLikes=${sortByLikes}`);
       const data: Map[] = await response.json();
       setMaps(data);
       setShowLoadMore(false);
@@ -116,7 +114,12 @@ const Home: React.FC = () => {
   // );
 
   const handleSortChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSortByLikes(event.target.value === "byLikes" ? 1 : 0);
+    const newByLikes = event.target.value === "byLikes" ? 1 : 0;
+    if (sortByLikes !== newByLikes) {
+      setMaps([]);
+      setPage(1);
+      setSortByLikes(newByLikes);
+    }
   };
 
   return (
@@ -157,7 +160,26 @@ const Home: React.FC = () => {
 
       <Play show={showPlayPopup} onClose={() => setShowPlayPopup(false)} map={selectedMap} />
 
-
+      <div className={styles.radioGroup}>
+        <label className={styles.radioLabel}>
+          <input
+            type="radio"
+            value="byChallenges"
+            checked={sortByLikes === 0}
+            onChange={handleSortChange}
+          />
+          <span>Sort by challenges</span>
+        </label>
+        <label className={styles.radioLabel}>
+          <input
+            type="radio"
+            value="byLikes"
+            checked={sortByLikes === 1}
+            onChange={handleSortChange}
+          />
+          <span>Sort by likes</span>
+        </label>
+      </div>
       <div className={styles.searchContainer}>
         <input
           type="text"
@@ -181,26 +203,6 @@ const Home: React.FC = () => {
 
         </button>
 
-      </div>
-      <div className={styles.radioGroup}>
-        <label className={styles.radioLabel}>
-          <input
-            type="radio"
-            value="byChallenges"
-            checked={sortByLikes === 0}
-            onChange={handleSortChange}
-          />
-          <span>Sort by challenges</span>
-        </label>
-        <label className={styles.radioLabel}>
-          <input
-            type="radio"
-            value="byLikes"
-            checked={sortByLikes === 1}
-            onChange={handleSortChange}
-          />
-          <span>Sort by likes</span>
-        </label>
       </div>
 
 
