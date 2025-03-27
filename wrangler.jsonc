@@ -1,0 +1,5 @@
+{
+  "name": "geochallenges",
+  "main": "pages/index.tsx",
+  "compatibility_date": "2025-01-01"
+}
