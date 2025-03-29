@@ -12,6 +12,8 @@ export default async function handler(
     const db = client.db('Cluster0'); // Replace with your actual database name
 
     const query = req.query.query as string;
+    const sortByLikes = !!(parseInt(req.query.sortByLikes as string) || 0); // Sort by no of challenges by default
+
     if (!query) {
       return res.status(400).json({ message: 'Query parameter is required' });
     }
@@ -20,7 +22,7 @@ export default async function handler(
     const maps: WithId<Document>[] = await db
       .collection('maps')
       .find({ name: { $regex: query, $options: 'i' } }) // Case-insensitive search
-      .sort({ challenges: -1 })
+      .sort(sortByLikes ? { likes: -1 } : { challenges: -1 })
       .toArray();
 
     // Transform the documents into Map[] type
