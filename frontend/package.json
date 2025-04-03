@@ -6,7 +6,7 @@
     "start": "serve out"
   },
   "dependencies": {
-    "@types/node": "^18.11.5",
+    "@types/node": "^18.18.0",
     "@types/react-dom": "^18.0.7",
     "@types/react": "^18.0.23",
     "next": "latest",

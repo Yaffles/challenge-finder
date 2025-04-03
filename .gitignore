@@ -34,7 +34,8 @@ wrangler.jsonc
 /coverage
 
 # Next.js
-/.next/
+
+.next
 /out/
 
 # Production
