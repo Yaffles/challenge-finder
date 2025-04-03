@@ -9,6 +9,7 @@ lerna-debug.log*
 
 # Node.js
 node_modules
+backend/dist
 /dist
 /dist-ssr
 *.local
