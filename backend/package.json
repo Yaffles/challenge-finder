@@ -1,0 +1,53 @@
+{
+	"name": "my-react-app",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc -b && vite build",
+		"lint": "eslint .",
+		"preview": "npm run build && wrangler dev",
+		"deploy": "npm run build && wrangler deploy",
+		"cf-typegen": "wrangler types"
+	},
+	"dependencies": {
+		"@types/uuid": "^10.0.0",
+		"@vercel/analytics": "^1.3.1",
+		"cookie": "^1.0.2",
+		"crypto": "^1.0.1",
+		"itty-router": "^5.0.18",
+		"mongodb": "^6.15.0",
+		"next": "^15.0.2",
+		"p-limit": "^6.1.0",
+		"preview": "^0.1.3",
+		"react": "^18",
+		"react-dom": "^18",
+		"wrangler": "^4.5.0"
+	},
+	"devDependencies": {
+		"@cloudflare/vite-plugin": "^0.1.17",
+		"@cloudflare/workers-types": "^4.20250321.0",
+		"@eslint/js": "^9.17.0",
+		"@vitejs/plugin-react": "^4.3.4",
+		"eslint-plugin-react-hooks": "^5.0.0",
+		"eslint-plugin-react-refresh": "^0.4.16",
+		"globals": "^15.14.0",
+		"typescript-eslint": "^8.18.2",
+		"vite": "^6.0.5",
+		"@cloudflare/next-on-pages": "^1.13.10",
+		"@types/cookie": "^0.6.0",
+		"@types/node": "^20",
+		"@types/react": "^18",
+		"@types/react-dom": "^18",
+		"cross-env": "^7.0.3",
+		"css-loader": "^7.1.2",
+		"dotenv-cli": "^7.4.2",
+		"eslint": "^8",
+		"eslint-config-next": "14.2.5",
+		"postcss": "^8",
+		"style-loader": "^4.0.0",
+		"tailwindcss": "^3.4.1",
+		"typescript": "^5"
+	}
+}

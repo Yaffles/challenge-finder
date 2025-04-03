@@ -1,0 +1,194 @@
+/* flags.module.css */
+.flagGameContainer {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-between;
+  margin: 1rem 0;
+  font-size: 1.1rem;
+}
+
+.flagContainer {
+  margin: 2rem 0;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  min-width: 320px;
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #eaeaea;
+}
+
+.flag {
+  width: 100%;
+  height: 100%;
+  min-width: 300px;
+  min-height: 200px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.flagPlaceholder {
+  min-width: 300px;
+  min-height: 200px;
+}
+
+.guessForm {
+  margin: 1.5rem 0;
+}
+
+.guessInput {
+  padding: 0.8rem;
+  width: 95%;
+  font-size: 1.1rem;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.submitButton {
+  padding: 0.8rem 1.5rem;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: background-color 0.2s;
+  flex: 1;
+}
+
+.skipButton {
+  padding: 0.8rem 1.5rem;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: background-color 0.2s;
+  flex: 1;
+}
+
+.submitButton:hover {
+  background-color: #45a049;
+}
+
+.skipButton:hover {
+  background-color: #c0392b;
+}
+
+.feedback {
+  margin-top: 1rem;
+  font-weight: bold;
+  font-size: 1.2rem;
+  animation: fadeIn 0.3s;
+}
+
+.correct {
+  color: #2ecc71;
+}
+
+.incorrect {
+  color: #e74c3c;
+}
+
+.answer {
+  color: #3498db;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Add to flags.module.css */
+.reactSelect {
+  width: 100%;
+  margin: 0 auto 1rem;
+  font-size: 1.1rem;
+}
+
+.reactSelect__input {
+  padding: 0.8rem !important;
+}
+
+.reactSelect__menu {
+  margin-top: -0.5rem;
+  border: 2px solid #ddd !important;
+  border-radius: 0 0 4px 4px !important;
+}
+
+.reactSelect__option--is-focused {
+  background-color: #f0f0f0 !important;
+}
+
+.reactSelect__option--is-selected {
+  background-color: #4CAF50 !important;
+  color: white !important;
+}
+
+.modeSelector {
+  margin: 1rem auto 2rem;
+  max-width: 300px;
+}
+
+.modeSelect {
+  font-size: 1.1rem;
+}
+
+.modeSelect__control {
+  border: 2px solid #ddd !important;
+  border-radius: 4px !important;
+  padding: 4px;
+}
+
+.modeSelect__single-value {
+  font-weight: bold !important;
+}
+
+.modeControls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.streetToggle {
+  padding: 0.8rem;
+  background: #f0f0f0;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.streetToggle.active {
+  background: #4CAF50;
+  color: white;
+  border-color: #45a049;
+}
+
+.streetToggle:hover {
+  background: #e0e0e0;
+}
+
+.streetToggle.active:hover {
+  background: #45a049;
+}
