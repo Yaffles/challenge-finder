@@ -28,7 +28,7 @@ backend/dist
 
 # wrangler files
 .wrangler
-wrangler.jsonc
+# wrangler.jsonc
 .dev.vars*
 
 # Testing
