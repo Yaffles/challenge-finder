@@ -90,9 +90,10 @@ const playedChallenges = await db.collection('log')
       });
     }
     else {
-      response = new Response(JSON.stringify({ challengeId: challenge }), {
+      // response with the challenge ID in plain text 200
+      response = new Response(challenge, {
         status: 200,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain' },
       });
     }
 
