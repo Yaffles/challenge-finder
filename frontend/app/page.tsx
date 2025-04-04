@@ -7,10 +7,12 @@ import Popup from '../components/Upload';
 import Play from '@/components/Play';
 import AccountPopup from '@/components/AccountPopup';
 import Head from 'next/head';
+import { Metadata } from 'next';
 import Script from 'next/script';
 
 import { Map } from '@/types/map';
 import Link from 'next/link';
+
 
 const getRandomColor = () => {
   const letters = '0123456789ABCDEF';
@@ -120,30 +122,13 @@ const Home: React.FC = () => {
   //   map.name.toLowerCase().includes(searchTerm.toLowerCase())
   // );
 
+
+
   return (
-    <>
-    <Head>
-      <title>GeoGuessr Challenges</title>
-      <meta name="description" content="Explore and play thousands of free GeoGuessr challenges with Challenge Finder. Discover a vast collection of challenges created by paid users, available to play for free. Start your adventure now!" />
-      <meta name="keywords" content="GeoGuessr, free challenges, play GeoGuessr, GeoGuessr challenges, geography game" />
-      <meta property="og:title" content="Free GeoGuessr Challenges - Play Thousands of Challenges on Challenge Finder" />
-      <meta property="og:description" content="Explore and play thousands of free GeoGuessr challenges with Challenge Finder. Discover a vast collection of challenges created by paid users, available to play for free. Start your adventure now!" />
-      <meta property="og:site_name" content="Challenge Finder" />
-      <meta property="og:image" content="./favicon.ico" />
-      <meta property="og:url" content="https://geochallenges.me/" />
-      <meta property="og:type" content="website" />
-      <meta name="msvalidate.01" content="FD5AC4FC134FA5EA1D579D8F43EB90A6" />
-      <link rel="canonical" href="https://geochallenges.me/" />
-      <link rel="icon" href="./favicon.ico" type="image/x-icon" />
-      <link rel="apple-touch-icon" href="./favicon.ico" />
-
-
-    </Head>
-
     <main>
     <div className={styles.container}>
       <AccountPopup />
-      <Link href="/games/flags" className={styles.flagLink}>Flag guesser</Link>
+      {/* <Link href="/games/flags" className={styles.flagLink}>Flag guesser</Link> */}
       <a href="https://github.com/yaffles/challenge-finder" target="_blank" className={styles.githubIcon}>
           <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="white">
               <path d="M12 .5C5.73.5.5 5.73.5 12.02c0 5.11 3.3 9.43 7.87 10.97.58.1.78-.25.78-.55 0-.27-.01-.99-.01-1.94-3.22.7-3.9-1.55-3.9-1.55-.52-1.31-1.28-1.66-1.28-1.66-1.04-.71.08-.7.08-.7 1.15.08 1.75 1.18 1.75 1.18 1.02 1.74 2.67 1.24 3.32.95.1-.74.4-1.24.73-1.53-2.57-.29-5.27-1.29-5.27-5.77 0-1.28.46-2.34 1.2-3.16-.12-.29-.52-1.46.12-3.04 0 0 .97-.31 3.18 1.2a11.07 11.07 0 0 1 2.9-.39c.98.01 1.96.13 2.88.38 2.2-1.5 3.17-1.2 3.17-1.2.65 1.58.25 2.75.12 3.04.75.82 1.2 1.87 1.2 3.16 0 4.5-2.71 5.47-5.3 5.75.42.36.78 1.07.78 2.16 0 1.56-.01 2.81-.01 3.18 0 .3.2.66.79.55C20.7 21.45 24 17.13 24 12.02 24 5.73 18.77.5 12 .5z"></path>
@@ -222,7 +207,6 @@ const Home: React.FC = () => {
 
     </div>
     </main>
-    </>
   );
 };
 
