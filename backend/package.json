@@ -8,6 +8,7 @@
 		"build": "tsc -b && vite build",
 		"lint": "eslint .",
 		"preview": "npm run build && wrangler dev",
+		"remote": "npm run build && wrangler dev --remote",
 		"deploy": "npm run build && wrangler deploy",
 		"cf-typegen": "wrangler types"
 	},

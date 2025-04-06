@@ -14,7 +14,16 @@
 	},
 	"observability": {
 		"enabled": true
-	},/**
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "geochallenges",
+			"database_id": "87b14d76-bd23-402b-bf4f-eab40badb3b1",
+		}
+	],
+
+	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
 	 */

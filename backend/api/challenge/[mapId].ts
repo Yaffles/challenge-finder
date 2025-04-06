@@ -1,11 +1,11 @@
 import { IRequest } from 'itty-router'; // Use IRequest for easier access to params if needed
-import { MongoClient, MongoClientOptions } from 'mongodb';
 
 import { parse } from 'cookie';
 import { ExecutionContext } from '@cloudflare/workers-types'; // Import type
 
 export interface Env {
   MONGODB_URI: string;
+  DB: D1Database;
 }
 
 export async function handleChallengeRequest(req: IRequest, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -24,30 +24,36 @@ export async function handleChallengeRequest(req: IRequest, env: Env, ctx: Execu
   }
 
   try {
-    const client = new MongoClient(env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000, // Timeout for server selection
-    } as MongoClientOptions);
+    const db = env.DB;
 
-    const db = client.db('Cluster0'); // Replace with your actual database name
+    const match: any = {
+      mapId: mapId,
+      move: null,
+      pan: null,
+      zoom: null,
+      timeLimit: null
+    };
 
-
-    const match: any = { mapId };
-
+    let filterByType = true;
     if (type === 'm') {
-      match.move = true;
-      match.pan = true;
-      match.zoom = true;
+      match.move = 1;
+      match.pan = 1;
+      match.zoom = 1;
     } else if (type === 'nm') {
-      match.move = false;
-      match.pan = true;
-      match.zoom = true;
+      match.move = 0;
+      match.pan = 1;
+      match.zoom = 1;
     } else if (type == 'nmpz') {
-      match.move = false;
-      match.pan = false;
-      match.zoom = false;
+      match.move = 0;
+      match.pan = 0;
+      match.zoom = 0;
+    } else {
+      filterByType = false; // Default to false if no valid type is provided
     }
 
+    let filterByTimeLimit = false;
     if (timeLimit && timeLimit !== '0') {
+      filterByTimeLimit = true;
       if (timeLimit === '360') {
         match.timeLimit = 0;
       } else {
@@ -55,34 +61,30 @@ export async function handleChallengeRequest(req: IRequest, env: Env, ctx: Execu
       }
     }
 
-  // Step 1: Get all played challenge IDs for the user
-const playedChallenges = await db.collection('log')
-.find({ userId: userId, mapId: mapId })
-.project({ challengeId: 1 })
-.toArray();
+    let sql = `SELECT id FROM challenges WHERE mapId = ?1`;
+    const params: any[] = [mapId];
+    let paramIndex = 2;
 
-  // Extract challenge IDs into an array
-  const playedChallengeIds = playedChallenges.map(log => log.challengeId);
-
-  // Step 2: Use aggregation to find a random challenge that is not played
-  const randomChallenge = await db.collection('challenges').aggregate([
-  {
-    $match: {
-      ...match,
-      _id: { $nin: playedChallengeIds }
+    if (filterByType) {
+      sql += ` AND move = ?${paramIndex++} AND pan = ?${paramIndex++} AND zoom = ?${paramIndex++}`;
+      params.push(match.move, match.pan, match.zoom);
     }
-  },
-  {
-    $sample: { size: 1 } // This selects a random document
-  }
-  ]).toArray();
+    if (filterByTimeLimit) {
+      sql += ` AND timeLimit = ?${paramIndex++}`;
+      params.push(match.timeLimit);
+    }
+    if (userId) {
+      sql += ` AND id NOT IN (SELECT challengeId FROM log WHERE userId = ?${paramIndex++} AND mapId = ?1 AND challengeId IS NOT NULL)`;
+      params.push(userId); // Add userId parameter for the subquery
+    }
+    sql += ` ORDER BY RANDOM() LIMIT 1`;
 
-  // Ensure we have a challenge before accessing
-  const challenge = randomChallenge.length > 0 ? randomChallenge[0]._id.toString() : null;
+    const findChallengeStmt = db.prepare(sql).bind(...params);
+    const randomChallengeResult = await findChallengeStmt.first();
+    const challenge = randomChallengeResult ? randomChallengeResult.id : null;
 
 
-
-  let response: Response;
+    let response: Response;
     if (!challenge) {
       response = new Response(JSON.stringify({ message: 'No challenges found for this map' }), {
         status: 404,
@@ -91,30 +93,29 @@ const playedChallenges = await db.collection('log')
     }
     else {
       // response with the challenge ID in plain text 200
-      response = new Response(challenge, {
+      response = new Response(String(challenge), {
         status: 200,
         headers: { 'Content-Type': 'text/plain' },
       });
     }
 
+    const apiLogPromise = db.prepare(
+      `INSERT INTO api_logs (endpoint, count) VALUES (?, 1) ON CONFLICT(endpoint) DO UPDATE SET count = count + 1`
+    ).bind('/api/challenge/[mapId]').run();
 
-    const apiLogPromise = db.collection('api_logs').updateOne(
-      { endpoint: '/api/challenge/[mapId]' },
-      { $inc: { count: 1 } },
-      { upsert: true } // Create the document if it doesn't exist
-    );
-
-    const logPromise = db.collection('log').insertOne({
-      mapId: mapId,
-      challengeId: challenge || null,
-      move: match.move,
-      pan: match.pan,
-      zoom: match.zoom,
-      timeLimit: match.timeLimit, // Only include if relevant
-      timestamp: new Date(),
-      success: !!challenge, // whether the API request was successful or not
-      userId: userId || null,
-    });
+    const logPromise = db.prepare(
+      `INSERT INTO log (mapId, challengeId, move, pan, zoom, timeLimit, timestamp, success, userId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      mapId,
+      challenge || null,
+      match.move,
+      match.pan,
+      match.zoom,
+      match.timeLimit || null,
+      new Date().toISOString(),
+      challenge ? 1 : 0, // success = 1 if challenge is found, otherwise 0
+      userId || null
+    ).run();
 
     ctx.waitUntil(Promise.all([apiLogPromise, logPromise]));
 

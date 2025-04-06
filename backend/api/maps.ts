@@ -1,49 +1,41 @@
-// src/maps.ts
-import { MongoClient, ObjectId, MongoClientOptions } from 'mongodb';
-
 export interface Env {
   MONGODB_URI: string;
-}
-
-interface MapDocument {
-  _id: ObjectId;          // MongoDB _id field as ObjectId
-  name: string;          // Map name
-  description: string;   // Map description
-  likes: number;         // Number of likes
-  challenges: number;    // Number of challenges
+  DB: D1Database;
 }
 
 export async function handleMapsRequest(request: Request, env: Env): Promise<Response> {
   try {
     const url = new URL(request.url);
 
-    const client = new MongoClient(env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000, // Timeout for server selection
-    } as MongoClientOptions);
-    const db = client.db('Cluster0');
+    const db = env.DB;
 
     // Get query parameters
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '12');
-    const skip = (page - 1) * limit;
 
-    const maps = await db
-      .collection<MapDocument>('maps')
-      .find({})
-      .sort({ challenges: -1 })
-      .skip(skip)
-      .limit(limit)
-      .toArray();
+    const validPage = Math.max(1, page); // Ensure page is at least 1
+    const validLimit = Math.max(1, Math.min(100, limit)); // Ensure limit is positive and maybe capped (e.g., max 100)
 
-    const formattedMaps = maps.map(map => ({
-      _id: map._id.toString(),
-      name: map.name,
-      description: map.description,
-      likes: map.likes,
-      challenges: map.challenges
-    }));
+    const offset = (validPage - 1) * validLimit; // Calculate offset (skip)
 
-    return Response.json(formattedMaps);
+
+    const stmt = db.prepare(
+      `SELECT id, name, description, likes, challenges
+       FROM maps
+       ORDER BY challenges DESC
+       LIMIT ?1 OFFSET ?2` // Using numbered placeholders is clear
+    ).bind(validLimit, offset); // Bind the validated limit and calculated offset
+
+    const { results } = await stmt.all(); // Fetch all results
+
+    if (!results) {
+      console.warn('No results found in the database.');
+      return Response.json({ message: 'No maps found' }, { status: 404 });
+    }
+
+
+
+    return Response.json(results);
   } catch (e) {
     console.error(e);
     return Response.json(
