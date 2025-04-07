@@ -1,11 +1,17 @@
 import { IRequest } from 'itty-router';
-import { MongoClient, MongoClientOptions } from 'mongodb';
-import { WithId, Document } from 'mongodb';
 import { Map } from '@/types/map';
 
 export interface Env {
-  MONGODB_URI: string;
+  DB: D1Database;
 }
+interface MapRow {
+  id: number | string; // D1 ID could be number (INTEGER) or string (TEXT)
+  name: string;
+  description: string | null;
+  likes: number;
+  challenges: number;
+}
+
 
 export async function handleSearchRequest(req: IRequest, env: Env): Promise<Response> {
   try {
@@ -17,26 +23,33 @@ export async function handleSearchRequest(req: IRequest, env: Env): Promise<Resp
       });
     }
 
-    const client = new MongoClient(env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000, // Timeout for server selection
-    } as MongoClientOptions);
-    const db = client.db('Cluster0'); // Replace with your actual database name
+    const db = env.DB;
 
     // Fetch documents from the 'maps' collection that match the search term
-    const maps: WithId<Document>[] = await db
-      .collection('maps')
-      .find({ name: { $regex: query, $options: 'i' } }) // Case-insensitive search
-      .sort({ challenges: -1 })
-      .toArray();
+    const sql = `
+      SELECT id, name, description, likes, challenges
+      FROM maps
+      WHERE name LIKE ?1 COLLATE NOCASE -- Explicitly use NOCASE collation if needed/available
+      ORDER BY challenges DESC
+    `;
+    const searchTerm = `%${query}%`; // Add wildcards for substring search
+    const stmt = db.prepare(sql).bind(searchTerm);
+    const { results } = await stmt.all<MapRow>(); // Fetch all results
+    let maps: MapRow[] = [];
+    if (results) {
+        maps = results;
+    } else {
+         console.warn("D1 query returned null/undefined instead of { results: [] }");
+    }
 
-    // Transform the documents into Map[] type
     const formattedMaps: Map[] = maps.map(map => ({
-      _id: map._id.toString(),
+      _id: map.id.toString(),
       name: map.name,
-      description: map.description,
+      description: map.description ?? '', // Use nullish coalescing for default empty string
       likes: map.likes,
       challenges: map.challenges
     }));
+
 
     return new Response(JSON.stringify(formattedMaps), {
       status: 200,

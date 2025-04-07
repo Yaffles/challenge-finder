@@ -1,147 +1,189 @@
 import { IRequest } from 'itty-router'; // Use IRequest for easier access to params if needed
-import { MongoClient, MongoClientOptions } from 'mongodb';
-
-
 import { getChallengeInfo } from '@/utils/challenge';
 
 export interface Env {
-  MONGODB_URI: string;
+  DB: D1Database;
 }
 
-async function processChallenge(input: string, client: any) {
+async function processChallenge(input: string, env: Env) {
   let regex = /geoguessr\.com\/challenge\/[A-Za-z0-9]+/g;
   let matches = input.match(regex);
-  if (!matches) return { successes: 0, errors: 0 };
+  if (!matches) return { successes: 0, errors: 0, duplicates: 0 };
 
   let successes = 0;
   let errors = 0;
   let duplicates = 0;
 
-  const db = client.db('Cluster0'); // Replace with your actual database name
-  const collection = db.collection('maps');
-  const challengesCollection = db.collection('challenges');
+  const db = env.DB;
 
   async function process(match: string) {
+    let id: string | undefined;
+    let mapId: string | undefined;
+
     try {
-      let idMatch = match.match(/geoguessr\.com\/challenge\/([A-Za-z0-9]+)/);
-      let id;
+      const idMatch = match.match(/geoguessr\.com\/challenge\/([A-Za-z0-9]+)/);
       if (idMatch && idMatch[1]) {
         id = idMatch[1];
       } else {
         errors += 1;
         return;
       }
-      let info = await getChallengeInfo(id);
+      const info = await getChallengeInfo(id);
 
-      if (!info) {
+      if (!info || !info['challenge']) {
         errors += 1;
         return;
       }
 
-      let mapId;
       if (info['challenge']['mapSlug'] == 'country-streak') {
         mapId = 'country-streak';
       } else if (info['challenge']['mapSlug'] == 'us-state-streak') {
         mapId = 'us-state-streak';
-      } else if (info['map']) {
-        try {
+      } else if (info['map'] && info['map']['id']) {
           mapId = info['map']['id'];
-        } catch (error) {
+      } else {
           errors += 1;
           return;
-        }
       }
 
-      const query = { _id: mapId };
-      const mapExists = await collection.findOne(query);
+      let mapExists = false;
+      try {
+          const checkMapStmt = db.prepare(
+              `SELECT id FROM maps WHERE id = ?1 LIMIT 1`
+          ).bind(mapId);
+          const mapResult = await checkMapStmt.first();
+          mapExists = !!mapResult; // True if mapResult is not null
+      } catch (dbError) {
+          console.error(`Error checking map existence for mapId ${mapId}:`, dbError);
+          errors += 1;
+          return;
+      }
 
       if (!mapExists) {
         let mapInfo;
         if (mapId == 'country-streak') {
           mapInfo = {
-            "_id": mapId,
+            "id": mapId,
             "name": "Country Streak",
             "description": "How many countries can you guess in a row?",
-            "likes": 50000
+            "likes": 50000,
+            "challenges": 0
           };
         } else if (mapId == 'us-state-streak') {
           mapInfo = {
-            "_id": mapId,
+            "id": mapId,
             "name": "US State Streak",
             "description": "How many US states can you guess in a row?",
-            "likes": 10000
+            "likes": 10000,
+            "challenges": 0
           };
         } else if (info['map']) {
           mapInfo = {
-            "_id": mapId,
+            "id": mapId,
             "name": info['map']['name'],
             "description": info['map']['description'],
             "likes": info['map']['likes'],
             "challenges": 0
           };
-        }
-        try {
-          await collection.insertOne(mapInfo);
-        } catch (error: any) {
-          if (error.code === 11000) {
-            // not an error as from simultaneous creations
-
-          }
-          else {
-            console.log('Error inserting map info:', error); // Debugging statement
-            errors += 1;
-            return;
-          }
-
-        }
-      }
-
-      const challengeDoc = {
-        "_id": id,
-        "mapId": mapId,
-        "timeLimit": info.challenge.timeLimit,
-        'move': !info.challenge.forbidMoving,
-        'zoom': !info.challenge.forbidZooming,
-        'pan': !info.challenge.forbidRotating,
-        'streak': info.challenge.gameMode === 'streak'
-      };
-      try {
-        await challengesCollection.insertOne(challengeDoc);
-      } catch (error: any) {
-        if (error.code === 11000) {
-          // console.log('Duplicate challenge ID:', id); // Debugging statement
-          duplicates += 1;
-          return;
         } else {
-          console.log('Error inserting challenge doc:', error); // Debugging statement
           errors += 1;
           return;
         }
-      }
 
-      const mapUpdate = { $inc: { challenges: 1 } };
+        try {
+          const insertMapStmt = db.prepare(
+            `INSERT INTO maps (id, name, description, likes, challenges)
+             VALUES (?1, ?2, ?3, ?4, ?5)
+             ON CONFLICT(id) DO NOTHING` // Assumes id is PRIMARY KEY
+          ).bind(
+            mapInfo.id,
+            mapInfo.name,
+            mapInfo.description,
+            mapInfo.likes,
+            mapInfo.challenges // Start challenges at 0
+          );
+          await insertMapStmt.run();
+          // We don't increment errors here if the conflict occurs, as it's expected behavior
+        } catch (dbError: any) {
+          // Catch errors *other* than the conflict (e.g., schema issues, connection errors)
+          console.error(`Error inserting map info for mapId ${mapId}:`, dbError);
+          errors += 1;
+          return;
+        }
+      } // End if (!mapExists)
+
+      const challengeData = {
+        id: id,
+        mapId: mapId,
+        timeLimit: info.challenge.timeLimit ?? 0, // Default timeLimit if null/undefined
+        move: info.challenge.forbidMoving ? 0 : 1,  // Convert boolean to 1/0
+        zoom: info.challenge.forbidZooming ? 0 : 1, // Convert boolean to 1/0
+        pan: info.challenge.forbidRotating ? 0 : 1,// Convert boolean to 1/0
+        streak: info.challenge.gameMode === 'streak' ? 1 : 0 // Convert boolean to 1/0
+      };
+      let challengeInsertedSuccessfully = false;
       try {
-        await collection.updateOne(query, mapUpdate);
-      } catch (error) {
+        const insertChallengeStmt = db.prepare(
+          `INSERT INTO challenges (id, mapId, timeLimit, move, zoom, pan, streak)
+           VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+           ON CONFLICT(id) DO NOTHING` // Assumes id is PRIMARY KEY
+        ).bind(
+          challengeData.id,
+          challengeData.mapId,
+          challengeData.timeLimit,
+          challengeData.move,
+          challengeData.zoom,
+          challengeData.pan,
+          challengeData.streak
+        );
+
+        const insertResult: D1Result = await insertChallengeStmt.run();
+
+        // Check if a row was actually inserted (meta.changes === 1)
+        // If meta.changes === 0, it means ON CONFLICT likely occurred (duplicate)
+        if (insertResult.meta.changes === 1) {
+            challengeInsertedSuccessfully = true;
+        } else {
+            // This challenge ID already existed
+            duplicates += 1;
+            // Do not proceed to update map count for duplicates
+            return;
+        }
+
+      } catch (dbError: any) {
         errors += 1;
         return;
       }
 
+      // --- Increment Map Challenge Count (Only if challenge was newly inserted) ---
+      if (challengeInsertedSuccessfully) {
+        try {
+          const updateMapStmt = db.prepare(
+            `UPDATE maps SET challenges = challenges + 1 WHERE id = ?1`
+          ).bind(mapId);
+          await updateMapStmt.run();
+          successes += 1; // Count success only after successful insert AND update
+        } catch (dbError: any) {
+            console.error(`Error updating challenge count for mapId ${mapId} after inserting challenge ${id}:`, dbError);
+            return;
+        }
+      } // End if (challengeInsertedSuccessfully)
 
-      successes += 1;
-    } catch (error) {
+    } catch (error) { // Catch unexpected errors in the overall process logic or getChallengeInfo
+      console.error(`Unexpected error processing match for challenge ID ${id || 'unknown'}:`, error);
       errors += 1;
     }
-  };
+  } // End of inner process function
 
-  const batchSize = 1000; // You can adjust the batch size for better performance
+
+  const batchSize = 1000;
   let tasks = [];
 
   for (let i = 0; i < matches.length; i++) {
-    tasks.push(process(matches[i])); // Replace with your actual async task
+    tasks.push(process(matches[i]));
     if (tasks.length >= batchSize) {
-      await Promise.all(tasks); // Wait for batch to complete
-      tasks = []; // Clear tasks for the next batch
+      await Promise.all(tasks);
+      tasks = [];
     }
   }
 
@@ -150,11 +192,9 @@ async function processChallenge(input: string, client: any) {
     await Promise.all(tasks);
   }
 
-  console.log(`async tasks done.`);
+  console.log(`async tasks done.`); // Keep log
 
 
-
-  await Promise.all(tasks);
   return { successes, errors, duplicates };
 }
 
@@ -162,10 +202,8 @@ export async function handleUploadRequest(req: IRequest, env: Env): Promise<Resp
   if (req.method === 'POST') {
     const { input } = (await req.json()) as { input: string };
 
-    const client = new MongoClient(env.MONGODB_URI, {
-          serverSelectionTimeoutMS: 5000, // Timeout for server selection
-        } as MongoClientOptions);
-    const result = await processChallenge(input, client);
+
+    const result = await processChallenge(input, env);
 
     return new Response(JSON.stringify({ message: `${result.successes} challenges successfully created, ${result.errors} errors occurred and ${result.duplicates} duplicates` }), {
       status: 200,

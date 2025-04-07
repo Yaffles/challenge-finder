@@ -6,4 +6,3 @@ export interface Map {
     challenges: number;
     link?: string; // link is added dynamically
   }
-  

@@ -1,5 +1,4 @@
 export interface Env {
-  MONGODB_URI: string;
   DB: D1Database;
 }
 

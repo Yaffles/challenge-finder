@@ -1,10 +1,8 @@
 import { IRequest } from 'itty-router'; // Use IRequest for easier access to params if needed
-
 import { parse } from 'cookie';
 import { ExecutionContext } from '@cloudflare/workers-types'; // Import type
 
 export interface Env {
-  MONGODB_URI: string;
   DB: D1Database;
 }
 
