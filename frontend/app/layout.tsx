@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import './globals.css'; // Example global styles
+import Script from 'next/script';
 
 // --- METADATA IS EXPORTED FROM THE LAYOUT (SERVER COMPONENT) ---
 export const metadata: Metadata = {
@@ -47,6 +48,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Google tag (gtag.js) */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-NQ3J0JT1NM"
+          strategy="afterInteractive"
+        />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-NQ3J0JT1NM');
+          `}
+        </Script>
+      </head>
       <body>
         {/* Layout structure (e.g., header, footer) can go here */}
         {children} {/* Your page component will be rendered here */}
