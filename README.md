@@ -22,7 +22,7 @@ Welcome to **Challenge Finder** — the easy way to find and play GeoGuessr chal
 To run the project locally, follow these steps:
 
    ```bash
-   git clone https://github.com/yourusername/challenge-finder.git
+   git clone https://github.com/Yaffles/challenge-finder.git
    cd challenge-finder
    npm install
    npm run dev
