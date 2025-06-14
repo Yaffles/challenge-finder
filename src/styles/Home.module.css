@@ -212,3 +212,25 @@
     right: 20px;
     top: 20px;
 }
+
+.radioGroup {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: flex-start;
+}
+
+.radioLabel input {
+  flex-shrink: 0;
+  align-items: flex-start;
+
+}
+.radioText {
+  display: block;
+  margin-left: 8px;
+}

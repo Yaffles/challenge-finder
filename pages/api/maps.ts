@@ -13,13 +13,14 @@ export default async function handler(
 
     const page = parseInt(req.query.page as string) || 1; // Default to page 1 if not provided
     const limit = parseInt(req.query.limit as string) || 12; // Default to 10 documents per page if not provided
+    const sortByLikes = !!(parseInt(req.query.sortByLikes as string) || 0); // Sort by no of challenges by default
     const skip = (page - 1) * limit;
 
     // Fetch all documents from the 'maps' collection sorted by number of challenges
     const maps: WithId<Document>[] = await db
       .collection('maps')
       .find({})
-      .sort({ challenges: -1 })
+      .sort(sortByLikes ? { likes: -1 } : { challenges: -1 })
       .skip(skip)
       .limit(limit)
       .toArray();
