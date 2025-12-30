@@ -146,7 +146,43 @@ const Home: React.FC = () => {
               <path d="M12 .5C5.73.5.5 5.73.5 12.02c0 5.11 3.3 9.43 7.87 10.97.58.1.78-.25.78-.55 0-.27-.01-.99-.01-1.94-3.22.7-3.9-1.55-3.9-1.55-.52-1.31-1.28-1.66-1.28-1.66-1.04-.71.08-.7.08-.7 1.15.08 1.75 1.18 1.75 1.18 1.02 1.74 2.67 1.24 3.32.95.1-.74.4-1.24.73-1.53-2.57-.29-5.27-1.29-5.27-5.77 0-1.28.46-2.34 1.2-3.16-.12-.29-.52-1.46.12-3.04 0 0 .97-.31 3.18 1.2a11.07 11.07 0 0 1 2.9-.39c.98.01 1.96.13 2.88.38 2.2-1.5 3.17-1.2 3.17-1.2.65 1.58.25 2.75.12 3.04.75.82 1.2 1.87 1.2 3.16 0 4.5-2.71 5.47-5.3 5.75.42.36.78 1.07.78 2.16 0 1.56-.01 2.81-.01 3.18 0 .3.2.66.79.55C20.7 21.45 24 17.13 24 12.02 24 5.73 18.77.5 12 .5z"></path>
           </svg>
       </a>
+
+      {/* --- SPONSOR SLOT --- */}
+      <div className={styles.sponsorSlot}>
+        <div className={styles.sponsorTitle}>Sponsor:</div>
+        <img
+          src="https://openguessr.com/img/openguessr.svg"
+          alt="OpenGuessr Logo"
+          className={styles.sponsorLogo}
+        />
+        <p className={styles.sponsorText}>
+          &quot;Free alternative <br/> to GeoGuessr&quot;
+        </p>
+        <a
+          href="https://openguessr.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.visitButton}
+        >
+          Visit
+        </a>
+      </div>
+
       <h1 className={styles.title}>GeoGuessr Challenge Links</h1>
+
+      {/* --- MOBILE SLOT (<870px) --- */}
+      <div className={styles.sponsorMobile}>
+        <span>Sponsor:</span>
+        <a href="https://openguessr.com" target="_blank" rel="noopener noreferrer">
+          <img
+            src="https://openguessr.com/img/openguessr.svg"
+            alt="OpenGuessr Logo"
+            className={styles.sponsorMobileLogo}
+          />
+        </a>
+      </div>
+      {/* ----------------------------- */}
+
       <div>
         <button className={styles.uploadButton} onClick={togglePopup}>
           Upload Challenge

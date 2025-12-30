@@ -13,6 +13,7 @@
   margin-top: 0;
 }
 
+
 .searchBar {
   padding: 10px;
   border: none;
@@ -211,4 +212,116 @@
     position: absolute;
     right: 20px;
     top: 20px;
+}
+
+/* --- DESKTOP SLOT  */
+.sponsorSlot {
+  position: absolute;
+  right: 40px;
+  top: 50vh;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 200px;
+  z-index: 10;
+  text-align: center;
+  transition: right 0.3s ease;
+
+  /* Fixed the border syntax here so it shows up */
+  /* border: 2px solid white; */
+  border-radius: 20px;
+  padding: 15px;
+}
+
+.sponsorTitle {
+  color: #ffffff;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.sponsorLogo {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+}
+
+.sponsorText {
+  color: #e0e0e0;
+  font-size: 0.9rem;
+  font-weight: 400;
+  margin-bottom: 1.2rem;
+  line-height: 1.4;
+}
+
+.visitButton {
+  background-color: transparent;
+  border: 2px solid #ff4500;
+  color: #ffffff;
+  padding: 10px 35px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.visitButton:hover {
+  background-color: #ff4500;
+  color: white;
+  box-shadow: 0px 4px 15px rgba(255, 69, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+/* --- MOBILE SLOT --- */
+.sponsorMobile {
+  display: none; /* Hidden by default on desktop */
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px; /* Space between logo and buttons */
+  font-size: 1.1rem;
+  color: white;
+  font-weight: 600;
+}
+
+.sponsorMobileLogo {
+  height: 25px; /* Make the logo fit nicely inline */
+  width: auto;
+  vertical-align: middle;
+  filter: drop-shadow(0 0 5px rgba(255, 69, 0, 0.5));
+  transition: transform 0.2s;
+}
+
+.sponsorMobileLogo:hover {
+  transform: scale(1.1);
+}
+
+/* --- MEDIA QUERIES --- */
+
+/* Move closer to edge on medium screens */
+@media (max-width: 1600px) {
+  .sponsorSlot {
+    right: 5px;
+    width: 180px;
+  }
+}
+
+/* Switch to Mobile view on smaller screens */
+@media (max-width: 870px) {
+  /* Hide the sidebar slot */
+  .sponsorSlot {
+    display: none;
+  }
+
+  /* Show the inline mobile slot */
+  .sponsorMobile {
+    display: flex;
+  }
+
+  .title {
+    margin-bottom: 0px;
+  }
 }
