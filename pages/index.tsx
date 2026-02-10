@@ -7,7 +7,6 @@ import Head from 'next/head';
 import Script from 'next/script';
 
 import { Map } from '@/types/map';
-import { Analytics } from "@vercel/analytics/react"
 
 const getRandomColor = () => {
   const letters = '0123456789ABCDEF';

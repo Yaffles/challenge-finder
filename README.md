@@ -14,8 +14,8 @@ Welcome to **Challenge Finder** — the easy way to find and play GeoGuessr chal
 ## 🛠 Tech Stack
 
 - **Frontend**: [Next.js](https://nextjs.org/), [React](https://reactjs.org/), TypeScript
-- **Backend**: MongoDB, Node.js API
-- **Hosting**: [Vercel](https://vercel.com/)
+- **Backend**: SQL, Node.js API
+- **Hosting**: [Cloudflare](https://www.cloudflare.com/)
 
 ## 📦 Installation
 
