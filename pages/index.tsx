@@ -249,7 +249,6 @@ const Home: React.FC = () => {
         </div>
       )}
       { loading && <div className={styles.spinner}></div> }
-      <Analytics />
 
     </div>
     </main>
