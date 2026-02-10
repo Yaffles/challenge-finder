@@ -1,5 +1,53 @@
 {
-  "name": "geochallenges",
-  "main": "pages/index.tsx",
-  "compatibility_date": "2025-01-01"
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"main": ".open-next/worker.js",
+	"name": "geochallenges-0",
+	"compatibility_date": "2024-12-30",
+	"compatibility_flags": [
+		// Enable Node.js API
+		// see https://developers.cloudflare.com/workers/configuration/compatibility-flags/#nodejs-compatibility-flag
+		"nodejs_compat",
+		// Allow to fetch URLs in your app
+		// see https://developers.cloudflare.com/workers/configuration/compatibility-flags/#global-fetch-strictly-public
+		"global_fetch_strictly_public",
+    "no_handle_cross_request_promise_resolution"
+	],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS",
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "geochallenges",
+			"database_id": "87b14d76-bd23-402b-bf4f-eab40badb3b1",
+			"remote": true
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "NEXT_CACHE_WORKERS_KV",
+			"id": "03af6ffcd50c48ffb030752b09f2a56f",
+			"remote": true
+		}
+	],
+	"r2_buckets": [
+		{
+			"bucket_name": "next-cache-bucket",
+			"binding": "NEXT_INC_CACHE_R2_BUCKET",
+			"remote": true
+		}
+	],
+	"services": [
+		{
+			"binding": "WORKER_SELF_REFERENCE",
+			// The service should match the "name" of your worker
+			"service": "geochallenges-0",
+		},
+	],
+	"images": {
+		// Enable image optimization
+		// see https://opennext.js.org/cloudflare/howtos/image
+		"binding": "IMAGES",
+	}
 }

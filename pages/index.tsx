@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../src/styles/Home.module.css';
-import '../src/styles/globals.css';
 import Popup from '../components/Upload';
 import Play from '@/components/Play';
 import AccountPopup from '@/components/AccountPopup';

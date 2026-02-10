@@ -1,11 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import clientPromise from '../../../src/lib/mongodb';
-import { ObjectId, WithId, Document } from 'mongodb';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 
-type Challenge = {
-  _id: string;
-  mapId: string;
-};
+export interface Env {
+  DB: D1Database;
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -17,33 +15,45 @@ export default async function handler(
   const userId = req.cookies.userId || null
 
   if (!mapId || typeof mapId !== 'string') {
-    res.status(400).json({ message: 'Invalid mapId' });
-    return;
+    return res.status(400).json({ message: 'Invalid mapId' });
   }
 
   try {
-    const client = await clientPromise;
-    const db = client.db('Cluster0'); // Replace with your actual database name
+    const { env, ctx } = await getCloudflareContext();
+    if (!env || !env.DB) {
+       console.error("DB binding not found on env");
+       throw new Error("DB binding missing");
+    }
+    const db = env.DB;
 
+    const match: any = {
+      mapId: mapId,
+      move: null,
+      pan: null,
+      zoom: null,
+      timeLimit: null
+    };
 
-
-    const match: any = { mapId };
-
+    let filterByType = true;
     if (type === 'm') {
-      match.move = true;
-      match.pan = true;
-      match.zoom = true;
+      match.move = 1;
+      match.pan = 1;
+      match.zoom = 1;
     } else if (type === 'nm') {
-      match.move = false;
-      match.pan = true;
-      match.zoom = true;
+      match.move = 0;
+      match.pan = 1;
+      match.zoom = 1;
     } else if (type == 'nmpz') {
-      match.move = false;
-      match.pan = false;
-      match.zoom = false;
+      match.move = 0;
+      match.pan = 0;
+      match.zoom = 0;
+    } else {
+      filterByType = false;
     }
 
+    let filterByTimeLimit = false;
     if (timeLimit && timeLimit !== '0') {
+      filterByTimeLimit = true;
       if (timeLimit === '360') {
         match.timeLimit = 0;
       } else {
@@ -51,69 +61,69 @@ export default async function handler(
       }
     }
 
-    console.log("fetching");
-  // Step 1: Get all played challenge IDs for the user
-const playedChallenges = await db.collection('log')
-.find({ userId: userId, mapId: mapId })
-.project({ challengeId: 1 })
-.toArray();
+    // Build SQL query
+    let sql = `SELECT id FROM challenges WHERE mapId = ?1`;
+    const params: any[] = [mapId];
+    let paramIndex = 2;
 
-  // Extract challenge IDs into an array
-  const playedChallengeIds = playedChallenges.map(log => log.challengeId);
-
-  // Step 2: Use aggregation to find a random challenge that is not played
-  const randomChallenge = await db.collection('challenges').aggregate([
-  {
-    $match: {
-      ...match,
-      _id: { $nin: playedChallengeIds }
+    if (filterByType) {
+      sql += ` AND move = ?${paramIndex++} AND pan = ?${paramIndex++} AND zoom = ?${paramIndex++}`;
+      params.push(match.move, match.pan, match.zoom);
     }
-  },
-  {
-    $sample: { size: 1 } // This selects a random document
-  }
-  ]).toArray();
+    if (filterByTimeLimit) {
+      sql += ` AND timeLimit = ?${paramIndex++}`;
+      params.push(match.timeLimit);
+    }
+    if (userId) {
+      const userParamIndex = paramIndex++;
+      sql += ` AND id NOT IN (SELECT challengeId FROM log WHERE userId = ?${userParamIndex} AND mapId = ?1 AND challengeId IS NOT NULL)`;
+      params.push(userId);
+    }
+    sql += ` ORDER BY RANDOM() LIMIT 1`;
 
-  // Ensure we have a challenge before accessing
-  const challenge = randomChallenge.length > 0 ? randomChallenge[0]._id.toString() : null;
-
-  console.log("finished fetching");
-
-
+    const findChallengeStmt = db.prepare(sql).bind(...params);
+    const randomChallengeResult: any = await findChallengeStmt.first();
+    const challenge = randomChallengeResult ? randomChallengeResult.id : null;
 
 
     if (!challenge) {
       res.status(404).json({ message: 'No challenges found for this map' });
+    } else {
+      res.status(200).send(String(challenge));
     }
-    else {
-      res.status(200).send(challenge);
+
+
+    // Prepare logs
+    const apiLogPromise = db.prepare(
+      `INSERT INTO api_logs (endpoint, count) VALUES (?, 1) ON CONFLICT(endpoint) DO UPDATE SET count = count + 1`
+    ).bind('/api/challenge/[mapId]').run();
+
+    const logPromise = db.prepare(
+      `INSERT INTO log (mapId, challengeId, move, pan, zoom, timeLimit, timestamp, success, userId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      mapId,
+      challenge || null,
+      match.move,
+      match.pan,
+      match.zoom,
+      match.timeLimit || null,
+      new Date().toISOString(),
+      challenge ? 1 : 0,
+      userId || null
+    ).run();
+
+    // Use ctx.waitUntil for background tasks
+    if (ctx && ctx.waitUntil) {
+        ctx.waitUntil(Promise.all([apiLogPromise, logPromise]));
+    } else {
+        await Promise.all([apiLogPromise, logPromise]);
     }
 
-
-    const apiLogPromise = db.collection('api_logs').updateOne(
-      { endpoint: '/api/challenge/[mapId]' },
-      { $inc: { count: 1 } },
-      { upsert: true } // Create the document if it doesn't exist
-    );
-
-    const logPromise = db.collection('log').insertOne({
-      mapId: mapId,
-      challengeId: challenge || null,
-      move: match.move,
-      pan: match.pan,
-      zoom: match.zoom,
-      timeLimit: match.timeLimit, // Only include if relevant
-      timestamp: new Date(),
-      success: !!challenge, // whether the API request was successful or not
-      userId: req.cookies.userId || null,
-    });
-
-
-    // Log the API call asynchronously, after sending the response
-    await Promise.allSettled([logPromise, apiLogPromise]);
 
   } catch (e) {
     console.error(e);
-    res.status(500).json({ message: 'Internal Server Error' });
+    if (!res.headersSent) {
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
   }
 }

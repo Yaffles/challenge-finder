@@ -1,39 +1,51 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import clientPromise from '../../src/lib/mongodb';
-import { WithId, Document } from 'mongodb';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { Map } from '@/types/map';
+
+export interface Env {
+  DB: D1Database;
+}
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Map[] | { message: string }>
 ) {
   try {
-    const client = await clientPromise;
-    const db = client.db('Cluster0'); // Replace with your actual database name
+    const { env } = await getCloudflareContext() as { env: Env };
 
-    const page = parseInt(req.query.page as string) || 1; // Default to page 1 if not provided
-    const limit = parseInt(req.query.limit as string) || 12; // Default to 10 documents per page if not provided
-    const skip = (page - 1) * limit;
+    if (!env || !env.DB) {
+       console.error("DB binding not found on env");
+       throw new Error("DB binding missing");
+    }
+    const db = env.DB;
 
-    // Fetch all documents from the 'maps' collection sorted by number of challenges
-    const maps: WithId<Document>[] = await db
-      .collection('maps')
-      .find({})
-      .sort({ challenges: -1 })
-      .skip(skip)
-      .limit(limit)
-      .toArray();
-    // const maps: WithId<Document>[] = await db.collection('maps').find({}).toArray();
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 12;
 
-    // Transform the documents into Map[] type
-    const formattedMaps: Map[] = maps.map(map => ({
-      _id: map._id.toString(),
+    const validPage = Math.max(1, page); // Ensure page is at least 1
+    const validLimit = Math.max(1, Math.min(100, limit)); // Ensure limit is positive and max 100
+    const offset = (validPage - 1) * validLimit; // Calculate offset (skip)
+
+    const stmt = db.prepare(
+      `SELECT id, name, description, likes, challenges
+       FROM maps
+       ORDER BY challenges DESC
+       LIMIT ?1 OFFSET ?2`
+    ).bind(validLimit, offset);
+
+    // Fetch all results
+    const { results } = await stmt.all<any>();
+
+    // Transform results to match Map interface (mapping SQL 'id' to frontend '_id')
+    const formattedMaps: Map[] = results.map((map) => ({
+      _id: String(map.id),
       name: map.name,
       description: map.description,
       likes: map.likes,
       challenges: map.challenges
     }));
 
+    res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
     res.status(200).json(formattedMaps);
   } catch (e) {
     console.error(e);

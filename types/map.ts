@@ -5,5 +5,4 @@ export interface Map {
     likes: number;
     challenges: number;
     link?: string; // link is added dynamically
-  }
-  
+}

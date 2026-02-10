@@ -1,133 +1,180 @@
-// pages/api/upload.ts
-import { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { getChallengeInfo } from '@/utils/challenge';
-import clientPromise from '../../src/lib/mongodb';
 
-async function processChallenge(input: string, client: any) {
+export interface Env {
+  DB: D1Database; // Ensure proper type or use 'any' if D1Database is not globally defined
+}
+
+async function processChallenge(input: string, env: Env) {
   let regex = /geoguessr\.com\/challenge\/[A-Za-z0-9]+/g;
   let matches = input.match(regex);
-  if (!matches) return { successes: 0, errors: 0 };
+  if (!matches) return { successes: 0, errors: 0, duplicates: 0 };
 
   let successes = 0;
   let errors = 0;
   let duplicates = 0;
 
-  const db = client.db('Cluster0'); // Replace with your actual database name
-  const collection = db.collection('maps');
-  const challengesCollection = db.collection('challenges');
+  const db = env.DB;
 
   async function process(match: string) {
+    let id: string | undefined;
+    let mapId: string | undefined;
+
     try {
-      let idMatch = match.match(/geoguessr\.com\/challenge\/([A-Za-z0-9]+)/);
-      let id;
+      const idMatch = match.match(/geoguessr\.com\/challenge\/([A-Za-z0-9]+)/);
       if (idMatch && idMatch[1]) {
         id = idMatch[1];
       } else {
         errors += 1;
         return;
       }
-      let info = await getChallengeInfo(id);
+      const info: any = await getChallengeInfo(id);
 
-      if (!info) {
+      if (!info || !info['challenge']) {
         errors += 1;
         return;
       }
 
-      let mapId;
-      if (info['challenge']['mapSlug'] == 'country-streak') {
+      const challengeInfo = info['challenge'];
+      const mapInfoRaw = info['map'];
+
+      if (challengeInfo['mapSlug'] == 'country-streak') {
         mapId = 'country-streak';
-      } else if (info['challenge']['mapSlug'] == 'us-state-streak') {
+      } else if (challengeInfo['mapSlug'] == 'us-state-streak') {
         mapId = 'us-state-streak';
+      } else if (mapInfoRaw && mapInfoRaw['id']) {
+        mapId = mapInfoRaw['id'];
       } else {
-        try {
-          mapId = info['map']['id'];
-        } catch (error) {
-          errors += 1;
-          return;
-        }
+        errors += 1;
+        return;
       }
 
-      const query = { _id: mapId };
-      const mapExists = await collection.findOne(query);
+      // Check if map exists
+      let mapExists = false;
+      try {
+        const checkMapStmt = db.prepare(
+          `SELECT id FROM maps WHERE id = ?1 LIMIT 1`
+        ).bind(mapId);
+        const mapResult = await checkMapStmt.first();
+        mapExists = !!mapResult;
+      } catch (dbError) {
+        console.error(`Error checking map existence for mapId ${mapId}:`, dbError);
+        errors += 1;
+        return;
+      }
 
       if (!mapExists) {
-        let mapInfo;
+        let newMapData;
         if (mapId == 'country-streak') {
-          mapInfo = {
-            "_id": mapId,
+          newMapData = {
+            "id": mapId,
             "name": "Country Streak",
             "description": "How many countries can you guess in a row?",
-            "likes": 50000
-          };
-        } else if (mapId == 'us-state-streak') {
-          mapInfo = {
-            "_id": mapId,
-            "name": "US State Streak",
-            "description": "How many US states can you guess in a row?",
-            "likes": 10000
-          };
-        } else {
-          mapInfo = {
-            "_id": mapId,
-            "name": info['map']['name'],
-            "description": info['map']['description'],
-            "likes": info['map']['likes'],
+            "likes": 50000,
             "challenges": 0
           };
-        }
-        try {
-          await collection.insertOne(mapInfo);
-        } catch (error: any) {
-          if (error.code === 11000) {
-            // not an error as from simultaneous creations
-
-          }
-          else {
-            console.log('Error inserting map info:', error); // Debugging statement
-            errors += 1;
-            return;
-          }
-
-        }
-      }
-
-      const challengeDoc = {
-        "_id": id,
-        "mapId": mapId,
-        "timeLimit": info.challenge.timeLimit,
-        'move': !info.challenge.forbidMoving,
-        'zoom': !info.challenge.forbidZooming,
-        'pan': !info.challenge.forbidRotating,
-        'streak': info.challenge.gameMode === 'streak'
-      };
-      try {
-        await challengesCollection.insertOne(challengeDoc);
-      } catch (error: any) {
-        if (error.code === 11000) {
-          // console.log('Duplicate challenge ID:', id); // Debugging statement
-          duplicates += 1;
-          return;
+        } else if (mapId == 'us-state-streak') {
+          newMapData = {
+            "id": mapId,
+            "name": "US State Streak",
+            "description": "How many US states can you guess in a row?",
+            "likes": 10000,
+            "challenges": 0
+          };
+        } else if (mapInfoRaw) {
+          newMapData = {
+            "id": mapId,
+            "name": mapInfoRaw['name'],
+            "description": mapInfoRaw['description'],
+            "likes": mapInfoRaw['likes'],
+            "challenges": 0
+          };
         } else {
-          console.log('Error inserting challenge doc:', error); // Debugging statement
+          errors += 1;
+          return;
+        }
+
+        try {
+          const insertMapStmt = db.prepare(
+            `INSERT INTO maps (id, name, description, likes, challenges)
+             VALUES (?1, ?2, ?3, ?4, ?5)
+             ON CONFLICT(id) DO NOTHING`
+          ).bind(
+            newMapData.id,
+            newMapData.name,
+            newMapData.description,
+            newMapData.likes,
+            newMapData.challenges
+          );
+          await insertMapStmt.run();
+        } catch (dbError: any) {
+          console.error(`Error inserting map info for mapId ${mapId}:`, dbError);
           errors += 1;
           return;
         }
       }
 
-      const mapUpdate = { $inc: { challenges: 1 } };
+      const challengeData = {
+        id: id,
+        mapId: mapId,
+        timeLimit: challengeInfo.timeLimit ?? 0,
+        move: challengeInfo.forbidMoving ? 0 : 1,
+        zoom: challengeInfo.forbidZooming ? 0 : 1,
+        pan: challengeInfo.forbidRotating ? 0 : 1,
+        streak: challengeInfo.gameMode === 'streak' ? 1 : 0
+      };
+
+      let challengeInsertedSuccessfully = false;
       try {
-        await collection.updateOne(query, mapUpdate);
-      } catch (error) {
+        const insertChallengeStmt = db.prepare(
+          `INSERT INTO challenges (id, mapId, timeLimit, move, zoom, pan, streak)
+           VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+           ON CONFLICT(id) DO NOTHING`
+        ).bind(
+          challengeData.id,
+          challengeData.mapId,
+          challengeData.timeLimit,
+          challengeData.move,
+          challengeData.zoom,
+          challengeData.pan,
+          challengeData.streak
+        );
+
+        // Using 'any' for the result to avoid strictly typed D1Result requirement in this file
+        const insertResult: any = await insertChallengeStmt.run();
+
+        // Check if a row was actually inserted (meta.changes === 1)
+        if (insertResult.meta && insertResult.meta.changes === 1) {
+          challengeInsertedSuccessfully = true;
+        } else {
+          duplicates += 1;
+          return;
+        }
+
+      } catch (dbError: any) {
         errors += 1;
         return;
       }
 
+      if (challengeInsertedSuccessfully) {
+        try {
+          const updateMapStmt = db.prepare(
+            `UPDATE maps SET challenges = challenges + 1 WHERE id = ?1`
+          ).bind(mapId);
+          await updateMapStmt.run();
+          successes += 1;
+        } catch (dbError: any) {
+          console.error(`Error updating challenge count for mapId ${mapId}:`, dbError);
+          return;
+        }
+      }
 
-      successes += 1;
     } catch (error) {
+      console.error(`Unexpected error processing match for challenge ID ${id || 'unknown'}:`, error);
       errors += 1;
     }
-  };
+  }
 
   const batchSize = 1000; // You can adjust the batch size for better performance
   let tasks = [];
@@ -153,15 +200,36 @@ async function processChallenge(input: string, client: any) {
   return { successes, errors, duplicates };
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'POST') {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method not allowed' });
+  }
+
+  try {
+    const { env } = await getCloudflareContext() as { env: Env };
+
+    if (!env || !env.DB) {
+       console.error("DB binding not found on env");
+       throw new Error("DB binding missing");
+    }
+
     const { input } = req.body;
 
-    const client = await clientPromise;
-    const result = await processChallenge(input, client);
+    if (!input || typeof input !== 'string') {
+        return res.status(400).json({ message: 'Invalid or missing input string' });
+    }
 
-    res.status(200).json({ message: `${result.successes} challenges successfully created, ${result.errors} errors occurred and ${result.duplicates} duplicates` });
-  } else {
-    res.status(405).json({ message: 'Method not allowed' });
+    const result = await processChallenge(input, env);
+
+    res.status(200).json({
+      message: `${result.successes} challenges successfully created, ${result.errors} errors occurred and ${result.duplicates} duplicates`
+    });
+
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 }

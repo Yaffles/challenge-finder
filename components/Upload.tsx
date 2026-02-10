@@ -35,7 +35,7 @@ const Popup: React.FC<PopupProps> = ({ show, onClose }) => {
           throw new Error('Network response was not ok');
         }
 
-        const result = await response.json();
+        const result = await response.json() as { message: string };
         console.log('Success:', result);
         // popup
         alert(result.message);
