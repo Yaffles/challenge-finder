@@ -25,7 +25,7 @@ export default async function handler(
        console.error("DB binding not found on env");
        throw new Error("DB binding missing");
     }
-    const db = env.DB;
+    const db = env.DB.withSession();
 
     const query = req.query.query as string;
     if (!query) {
