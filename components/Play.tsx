@@ -40,34 +40,28 @@ const Popup: React.FC<PopupProps> = ({ show, onClose, map }) => {
   if (!show || !map) {
     return null;
   }
-
-  const openLink = async (challengeId: string) => {
-    try {
-      const newWindow = window.open('', '_blank');
-      const challengeLink = `https://www.geoguessr.com/challenge/${challengeId}`;
-      if (newWindow) {
-        newWindow.location.href = challengeLink;
-      } else {
-        window.location.href = challengeLink; // Fallback if the new window is blocked
-      }
-    } catch (error) {
-      console.error('Error fetching the challenge:', error);
-    }
-  };
-
   const handlePlay = async (type?: string) => {
+    const newWindow = window.open('', '_blank');
+    if (!newWindow) {
+      alert('Popup blocked! Please allow popups for this site.');
+      return;
+    }
+
     let url = `/api/challenge/${map._id}?`;
     if (type) {
       url += `type=${type}&`;
     }
     url += `timeLimit=${timeLimits[timeLimitIndex]}`;
+
     const response = await fetch(url);
-    if (response.status == 404) {
+    if (response.status === 404) {
       alert('No challenges found for this setting. Please try again with different settings or wait one day for it to generate.');
-      return
-    };
+      newWindow.close();
+      return;
+    }
+
     const challengeId: string = await response.text();
-    openLink(challengeId);
+    newWindow.location.href = `https://www.geoguessr.com/challenge/${challengeId}`;
   };
 
   const handleSliderChange = (event: React.ChangeEvent<HTMLInputElement>) => {
