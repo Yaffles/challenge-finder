@@ -19,8 +19,8 @@
 	"d1_databases": [
 		{
 			"binding": "DB",
-			"database_name": "geochallenges",
-			"database_id": "87b14d76-bd23-402b-bf4f-eab40badb3b1",
+			"database_name": "geochallenges_v2",
+			"database_id": "19397822-4a07-43d6-884b-d4daed77c006",
 			"remote": true
 		}
 	],
