@@ -76,7 +76,7 @@ export default async function handler(
     }
     if (userId) {
       const userParamIndex = paramIndex++;
-      sql += ` AND id NOT IN (SELECT challengeId FROM log WHERE userId = ?${userParamIndex} AND mapId = ?1 AND challengeId IS NOT NULL)`;
+      sql += ` AND id NOT IN (SELECT challengeId FROM log WHERE userId = ?${userParamIndex})`;
       params.push(userId);
     }
     sql += ` ORDER BY RANDOM() LIMIT 1`;
@@ -98,25 +98,25 @@ export default async function handler(
       `INSERT INTO api_logs (endpoint, count) VALUES (?, 1) ON CONFLICT(endpoint) DO UPDATE SET count = count + 1`
     ).bind('/api/challenge/[mapId]').run();
 
-    const logPromise = db.prepare(
-      `INSERT INTO log (mapId, challengeId, move, pan, zoom, timeLimit, timestamp, success, userId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    ).bind(
-      mapId,
-      challenge || null,
-      match.move,
-      match.pan,
-      match.zoom,
-      match.timeLimit || null,
-      new Date().toISOString(),
-      challenge ? 1 : 0,
-      userId || null
-    ).run();
+    let tasks = [apiLogPromise];
+
+    if (challenge) {
+      const logPromise = db.prepare(
+        `INSERT INTO log (challengeId, timestamp, userId) VALUES (?, ?, ?)`
+      ).bind(
+        challenge,
+        Math.floor(Date.now() / 1000),
+        userId || null
+      ).run();
+      tasks.push(logPromise);
+    }
+
 
     // Use ctx.waitUntil for background tasks
     if (ctx && ctx.waitUntil) {
-        ctx.waitUntil(Promise.all([apiLogPromise, logPromise]));
+        ctx.waitUntil(Promise.all(tasks));
     } else {
-        await Promise.all([apiLogPromise, logPromise]);
+        await Promise.all(tasks);
     }
 
 

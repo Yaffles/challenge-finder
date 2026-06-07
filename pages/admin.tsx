@@ -12,7 +12,7 @@ type Log = {
   move: boolean;
   pan: boolean;
   zoom: boolean;
-  timestamp: string;
+  timestamp: number;
   success: boolean;
   timeLimit?: number;
 };
@@ -144,7 +144,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query }) => 
     pastDate.setDate(pastDate.getDate() - days);
     // SQLite datetime comparison string
     timeFilterSql = ` WHERE timestamp >= ?1`;
-    params.push(pastDate.toISOString());
+    params.push(Math.floor(pastDate.getTime() / 1000));
   }
 
   // 1. Fetch Logs
@@ -153,7 +153,15 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query }) => 
   // Group by mapId is requested.
   // SQL: SELECT * FROM log [WHERE ...] ORDER BY timestamp DESC
 
-  const logsQuery = `SELECT * FROM log ${timeFilterSql} ORDER BY timestamp DESC`;
+  const logsQuery = `
+    SELECT
+      l.timestamp, l.challengeId,
+      c.mapId, c.move, c.pan, c.zoom, c.timeLimit
+    FROM log l
+    LEFT JOIN challenges c ON l.challengeId = c.id
+    ${timeFilterSql}
+    ORDER BY l.timestamp DESC
+  `;
   const logsStmt = db.prepare(logsQuery).bind(...params);
   const { results: allLogs } = await logsStmt.all<any>(); // raw logs
 
@@ -176,8 +184,8 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query }) => 
           move: Boolean(log.move),
           pan: Boolean(log.pan),
           zoom: Boolean(log.zoom),
-          timestamp: log.timestamp, // Assuming ISO string in DB
-          success: Boolean(log.success), // Assuming stored as 1/0
+          timestamp: log.timestamp * 1000, // Converts seconds back to JS Milliseconds
+          success: true, // Assuming stored as 1/0
           timeLimit: log.timeLimit
       });
   });
